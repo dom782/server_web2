@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ScanPC">
+<meta name="theme-color" content="#2563eb">
+<link rel="manifest" href="/manifest.json">
+<title>ScanPC</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:       #f0f4ff;
+  --surface:  #ffffff;
+  --surface2: #f8faff;
+  --border:   #dde3f0;
+  --border2:  #c5d0e8;
+  --blue:     #2563eb;
+  --blue-l:   #3b82f6;
+  --blue-d:   #1d4ed8;
+  --blue-bg:  #eff6ff;
+  --blue-dim: #93c5fd;
+  --green:    #16a34a;
+  --green-bg: #f0fdf4;
+  --red:      #dc2626;
+  --red-bg:   #fef2f2;
+  --orange:   #ea580c;
+  --text:     #1e293b;
+  --text2:    #475569;
+  --dim:      #94a3b8;
+  --mono:     'JetBrains Mono',monospace;
+  --sans:     'Inter',sans-serif;
+  --r:        12px;
+  --r-sm:     8px;
+  --shadow:   0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+  --shadow-md:0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.05);
+}
+
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none}
+#app{display:flex;flex-direction:column;height:100dvh;max-width:480px;margin:0 auto}
+
+/* ── HEADER ─────────────────────────────────────────────── */
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 16px;
+  background:var(--blue);
+  flex-shrink:0;
+}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-icon{
+  width:30px;height:30px;background:rgba(255,255,255,.2);
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;
+}
+.brand-name{font-family:var(--mono);font-size:14px;letter-spacing:2px;color:#fff;font-weight:500}
+.header-right{display:flex;align-items:center;gap:8px}
+.pill{
+  display:flex;align-items:center;gap:5px;
+  padding:4px 10px;border-radius:20px;
+  background:rgba(255,255,255,.15);
+  font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.8);
+}
+.pill.on{background:rgba(255,255,255,.25);color:#fff}
+.pill-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.pc-pill{
+  display:flex;align-items:center;gap:4px;
+  padding:4px 10px;border-radius:20px;
+  background:rgba(255,255,255,.15);
+  font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.7);
+}
+.pc-pill.on{color:#86efac;background:rgba(134,239,172,.15)}
+
+/* ── SETUP ───────────────────────────────────────────────── */
+#setup{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:32px 24px;gap:20px;background:var(--bg);
+}
+.s-icon{font-size:52px}
+.s-title{font-size:24px;font-weight:700;color:var(--blue)}
+.s-sub{font-size:13px;color:var(--text2);text-align:center;line-height:1.7}
+.field{width:100%;display:flex;flex-direction:column;gap:6px}
+.field label{font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.5px;text-transform:uppercase}
+.field input{
+  width:100%;padding:12px 14px;
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--r-sm);color:var(--text);
+  font-family:var(--sans);font-size:15px;outline:none;
+  box-shadow:var(--shadow);transition:border-color .2s;
+}
+.field input:focus{border-color:var(--blue)}
+.change-name{font-size:11px;color:var(--blue);text-align:right;cursor:pointer;display:none}
+.btn-primary{
+  width:100%;padding:13px;border:none;border-radius:var(--r-sm);
+  background:var(--blue);color:#fff;
+  font-family:var(--sans);font-size:15px;font-weight:600;
+  cursor:pointer;transition:background .15s,transform .1s;
+  box-shadow:0 2px 4px rgba(37,99,235,.3);
+}
+.btn-primary:active{background:var(--blue-d);transform:scale(.99)}
+.btn-primary:disabled{background:var(--dim);box-shadow:none;cursor:default;transform:none}
+
+/* ── MAIN ────────────────────────────────────────────────── */
+#main{flex:1;display:none;flex-direction:column;overflow:hidden}
+#main.show{display:flex}
+
+/* Status bar */
+.status-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:5px 14px;background:var(--surface);
+  border-bottom:1px solid var(--border);
+  font-size:10px;color:var(--dim);flex-shrink:0;
+}
+#usersOnline{font-family:var(--mono);font-size:10px;color:var(--text2)}
+
+/* ── TABS ────────────────────────────────────────────────── */
+.tab-bar{
+  display:flex;background:var(--surface);
+  border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.tab-btn{
+  flex:1;padding:11px 4px;border:none;background:none;
+  color:var(--dim);font-family:var(--sans);font-size:11px;font-weight:500;
+  cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;
+  border-bottom:2px solid transparent;transition:color .15s,border-color .15s;
+  position:relative;
+}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab-btn .tab-ico{font-size:15px}
+.tab-badge{
+  position:absolute;top:5px;right:calc(50% - 16px);
+  background:var(--red);color:#fff;
+  font-size:9px;font-weight:700;font-family:var(--mono);
+  padding:1px 5px;border-radius:10px;min-width:16px;text-align:center;
+  display:none;
+}
+.tab-badge.show{display:block}
+
+/* ── PANELS ──────────────────────────────────────────────── */
+.tab-panel{flex:1;display:none;flex-direction:column;overflow:hidden}
+.tab-panel.active{display:flex}
+
+/* ─────────────────────────────────────────────────────────
+   TAB: COMANDE
+───────────────────────────────────────────────────────── */
+.list-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:var(--surface);
+  border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.list-title{font-size:12px;font-weight:600;color:var(--text2)}
+.list-count{font-family:var(--mono);font-size:11px;color:var(--blue);font-weight:600}
+#ordersList{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+#ordersList::-webkit-scrollbar{width:3px}
+#ordersList::-webkit-scrollbar-thumb{background:var(--border)}
+
+.order-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r);box-shadow:var(--shadow);
+  overflow:hidden;animation:slideIn .15s ease;
+}
+.order-card.new{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+@keyframes slideIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+.oc-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:var(--blue-bg);cursor:pointer;
+}
+.oc-from{font-size:13px;font-weight:600;color:var(--text)}
+.oc-id{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:2px}
+.oc-status{
+  font-family:var(--mono);font-size:9px;padding:3px 9px;border-radius:20px;
+  background:#fff;border:1px solid var(--border);color:var(--dim);font-weight:500;
+}
+.oc-status.pending{background:var(--blue-bg);border-color:var(--blue-dim);color:var(--blue)}
+.oc-status.modified{background:#fef3c7;border-color:#fcd34d;color:#92400e}
+.oc-status.confirmed{background:var(--green-bg);border-color:#86efac;color:var(--green)}
+.oc-body{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.oc-note{
+  font-size:12px;color:var(--text2);font-style:italic;
+  padding:7px 10px;background:var(--blue-bg);border-radius:var(--r-sm);
+  border-left:3px solid var(--blue-dim);
+}
+.oc-items{display:flex;flex-direction:column;gap:4px}
+.oc-item{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 10px;background:var(--surface2);
+  border:1px solid var(--border);border-radius:var(--r-sm);
+}
+.oc-cod{font-family:var(--mono);font-size:11px;color:var(--blue);min-width:72px;font-weight:500}
+.oc-desc{flex:1;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qty-row{display:flex;align-items:center;gap:3px}
+.qty-btn{
+  width:22px;height:22px;border:1px solid var(--border);background:var(--surface);
+  color:var(--text);border-radius:5px;cursor:pointer;font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+}
+.qty-val{font-family:var(--mono);font-size:12px;min-width:22px;text-align:center}
+.item-del{
+  width:20px;height:20px;border:none;background:none;
+  color:var(--dim);font-size:13px;cursor:pointer;flex-shrink:0;
+}
+.item-del:active{color:var(--red)}
+.oc-footer{display:flex;gap:7px;padding-top:4px}
+.oc-btn{
+  flex:1;padding:8px;border-radius:var(--r-sm);border:1px solid var(--border);
+  background:var(--surface2);color:var(--text);font-size:12px;font-weight:500;
+  cursor:pointer;text-align:center;
+}
+.oc-btn:active{background:var(--border)}
+.oc-btn.primary{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
+.oc-btn.success{background:var(--green);color:#fff;border-color:var(--green)}
+.oc-time{font-family:var(--mono);font-size:9px;color:var(--dim);text-align:right}
+
+.empty-state{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;color:var(--dim);text-align:center;padding:30px;
+}
+.empty-state .e-ico{font-size:38px;opacity:.25}
+.empty-state p{font-size:13px;line-height:1.7;color:var(--text2)}
+
+/* ─────────────────────────────────────────────────────────
+   TAB: NUOVA COMANDA
+───────────────────────────────────────────────────────── */
+#newPanel{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+.new-top{
+  padding:12px 14px;background:var(--surface);
+  border-bottom:1px solid var(--border);flex-shrink:0;
+  display:flex;flex-direction:column;gap:10px;
+}
+.dest-row{display:flex;align-items:center;gap:8px}
+.dest-label{font-size:11px;font-weight:600;color:var(--text2);white-space:nowrap;text-transform:uppercase}
+.dest-select{
+  flex:1;padding:8px 10px;background:var(--surface);
+  border:1.5px solid var(--border);border-radius:var(--r-sm);
+  color:var(--text);font-family:var(--sans);font-size:13px;
+  outline:none;cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2394a3b8'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;
+}
+.dest-select:focus{border-color:var(--blue)}
+
+.search-row{display:flex;gap:6px}
+.search-input{
+  flex:1;padding:10px 12px;background:var(--surface);
+  border:1.5px solid var(--border);border-radius:var(--r-sm);
+  color:var(--text);font-family:var(--sans);font-size:14px;
+  outline:none;box-shadow:var(--shadow);transition:border-color .2s;
+}
+.search-input:focus{border-color:var(--blue)}
+.sbtn{
+  padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);
+  background:var(--surface);color:var(--text2);font-family:var(--sans);font-size:12px;font-weight:500;
+  cursor:pointer;white-space:nowrap;transition:all .1s;box-shadow:var(--shadow);
+}
+.sbtn:active{transform:scale(.96)}
+.sbtn.blue{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
+.sbtn.scan-btn{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-dim)}
+.sbtn.scanning{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* Camera inline in nuova comanda */
+#newCamView{
+  position:relative;background:#000;flex-shrink:0;display:none;
+  border-bottom:1px solid var(--border);
+}
+#newCamView.show{display:block}
+#newVideo{width:100%;display:block;object-fit:cover;max-height:200px}
+#newCanvas{display:none}
+.vf-overlay{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  pointer-events:none;
+}
+.vf-box{width:180px;height:120px;position:relative}
+.vf-c{position:absolute;width:20px;height:20px;border-color:#fff;border-style:solid;opacity:.9}
+.vf-c.tl{top:0;left:0;border-width:2px 0 0 2px}
+.vf-c.tr{top:0;right:0;border-width:2px 2px 0 0}
+.vf-c.bl{bottom:0;left:0;border-width:0 0 2px 2px}
+.vf-c.br{bottom:0;right:0;border-width:0 2px 2px 0}
+.vf-scan-line{
+  position:absolute;left:6px;right:6px;height:2px;
+  background:linear-gradient(90deg,transparent,#3b82f6,transparent);
+  box-shadow:0 0 8px #3b82f6;top:6px;
+}
+.vf-scan-line.animate{animation:scanLine 1.2s ease-in-out infinite}
+@keyframes scanLine{0%{top:6px}50%{top:calc(100% - 8px)}100%{top:6px}}
+.vf-flash{position:absolute;inset:0;background:#3b82f6;opacity:0;pointer-events:none;transition:opacity .06s}
+.vf-flash.on{opacity:.25}
+.vf-chip{
+  position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+  background:rgba(255,255,255,.95);backdrop-filter:blur(8px);
+  border:1px solid var(--blue);border-radius:var(--r-sm);
+  padding:5px 14px;font-family:var(--mono);font-size:11px;color:var(--blue);
+  white-space:nowrap;max-width:90%;overflow:hidden;text-overflow:ellipsis;
+  opacity:0;transition:opacity .2s;pointer-events:none;box-shadow:var(--shadow);
+}
+.vf-chip.show{opacity:1}
+
+/* Status ricerca */
+.search-status-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 14px;background:var(--surface2);
+  border-bottom:1px solid var(--border);flex-shrink:0;
+  font-size:11px;color:var(--text2);
+}
+.spinner{
+  width:12px;height:12px;border:2px solid var(--border);
+  border-top-color:var(--blue);border-radius:50%;
+  animation:spin .6s linear infinite;display:none;flex-shrink:0;
+}
+.spinner.show{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Risultati ricerca */
+.results-header{
+  padding:6px 14px;background:var(--surface);
+  border-bottom:1px solid var(--border);flex-shrink:0;
+  font-size:11px;font-weight:600;color:var(--text2);
+}
+#newResults{flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:5px}
+#newResults::-webkit-scrollbar{width:3px}
+#newResults::-webkit-scrollbar-thumb{background:var(--border)}
+.result-row{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 12px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--r-sm);
+  cursor:pointer;transition:border-color .12s;box-shadow:var(--shadow);
+}
+.result-row:active{border-color:var(--blue)}
+.r-cod{font-family:var(--mono);font-size:11px;color:var(--blue);min-width:72px;font-weight:500}
+.r-desc{flex:1;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.r-add{
+  padding:4px 10px;border:1px solid var(--blue-dim);border-radius:5px;
+  background:var(--blue-bg);color:var(--blue);font-size:11px;font-weight:600;
+  cursor:pointer;flex-shrink:0;
+}
+
+/* Carrello */
+.cart-section{
+  border-top:2px solid var(--border);background:var(--surface);
+  flex-shrink:0;max-height:42%;display:flex;flex-direction:column;
+}
+.cart-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:7px 14px;border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.cart-title{font-size:11px;font-weight:600;color:var(--text2)}
+.cart-count{font-family:var(--mono);font-size:11px;color:var(--blue);font-weight:600}
+.cart-clear{font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;padding:2px 6px}
+#cartItems{flex:1;overflow-y:auto;padding:6px 12px;display:flex;flex-direction:column;gap:4px}
+.cart-item{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 9px;background:var(--surface2);
+  border:1px solid var(--border);border-radius:var(--r-sm);
+}
+.ci-cod{font-family:var(--mono);font-size:10px;color:var(--blue);min-width:68px;font-weight:500}
+.ci-desc{flex:1;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ci-qty{display:flex;align-items:center;gap:3px}
+.ci-qbtn{
+  width:20px;height:20px;border:1px solid var(--border);background:var(--surface);
+  color:var(--text);border-radius:4px;cursor:pointer;font-size:13px;
+  display:flex;align-items:center;justify-content:center;
+}
+.ci-qval{font-family:var(--mono);font-size:11px;min-width:18px;text-align:center}
+.ci-del{width:18px;height:18px;border:none;background:none;color:var(--dim);font-size:13px;cursor:pointer;flex-shrink:0}
+.ci-del:active{color:var(--red)}
+.note-area{padding:6px 12px;flex-shrink:0}
+.note-input{
+  width:100%;padding:8px 10px;background:var(--surface);
+  border:1.5px solid var(--border);border-radius:var(--r-sm);
+  color:var(--text);font-family:var(--sans);font-size:12px;
+  outline:none;resize:none;
+}
+.note-input:focus{border-color:var(--blue)}
+.cart-footer{padding:8px 12px;flex-shrink:0}
+
+/* ─────────────────────────────────────────────────────────
+   TAB: SCANSIONA
+───────────────────────────────────────────────────────── */
+#scanPanel{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#scanCamView{position:relative;background:#1e293b;overflow:hidden;flex-shrink:0;display:none}
+#scanCamView.show{display:block}
+#scanVideo{width:100%;display:block;object-fit:cover}
+#scanCanvas{display:none}
+.scan-area{
+  display:flex;flex-direction:column;align-items:center;
+  padding:14px;gap:8px;background:var(--surface);
+  border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.btn-scan{
+  width:100%;max-width:320px;padding:13px;border:none;border-radius:var(--r-sm);
+  background:var(--blue);color:#fff;font-family:var(--sans);font-size:15px;font-weight:600;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 2px 4px rgba(37,99,235,.3);transition:transform .1s;
+}
+.btn-scan:active{transform:scale(.99)}
+.btn-scan.stop{background:var(--red);box-shadow:0 2px 4px rgba(220,38,38,.3)}
+.scan-hint{font-size:11px;color:var(--dim)}
+.scan-toolbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.counter{font-family:var(--mono);font-size:11px;color:var(--text2)}
+.counter b{color:var(--blue)}
+.t-actions{display:flex;gap:6px}
+.tbtn{
+  padding:5px 10px;border-radius:var(--r-sm);border:1px solid var(--border);
+  background:var(--surface2);color:var(--text2);font-family:var(--mono);font-size:10px;
+  cursor:pointer;
+}
+.tbtn.red{border-color:var(--red);color:var(--red);background:var(--red-bg)}
+.tbtn:disabled{opacity:.4;cursor:default}
+#scanList{flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:5px}
+#scanList::-webkit-scrollbar{width:3px}
+#scanList::-webkit-scrollbar-thumb{background:var(--border)}
+.scan-item{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:8px 10px;
+  box-shadow:var(--shadow);animation:slideIn .12s ease;
+}
+.si-n{font-family:var(--mono);font-size:10px;color:var(--dim);width:18px;text-align:right;flex-shrink:0}
+.badge{font-family:var(--mono);font-size:9px;padding:2px 6px;border-radius:4px;flex-shrink:0;font-weight:500}
+.badge.qr{background:#ede9fe;color:#7c3aed;border:1px solid #c4b5fd}
+.badge.ean{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-dim)}
+.badge.code{background:#fef3c7;color:#92400e;border:1px solid #fcd34d}
+.si-val{flex:1;font-family:var(--mono);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.si-time{font-family:var(--mono);font-size:9px;color:var(--dim);flex-shrink:0}
+.si-del{width:20px;height:20px;border:none;background:none;color:var(--dim);font-size:13px;cursor:pointer;border-radius:3px;flex-shrink:0}
+.si-del:active{color:var(--red)}
+.send-bar{padding:10px 12px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0}
+
+/* ── TOAST ───────────────────────────────────────────────── */
+#toast{
+  position:fixed;bottom:72px;left:50%;transform:translateX(-50%);
+  background:var(--text);color:#fff;
+  border-radius:var(--r-sm);padding:9px 16px;
+  font-family:var(--mono);font-size:11px;white-space:nowrap;pointer-events:none;
+  opacity:0;transition:opacity .2s;z-index:99;box-shadow:var(--shadow-md);
+}
+#toast.show{opacity:1}
+#toast.ok{background:var(--green)}
+#toast.err{background:var(--red)}
+#toast.warn{background:var(--orange)}
+#toast.info{background:var(--blue)}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand">
+      <div class="brand-icon">📦</div>
+      <span class="brand-name">SCANPC</span>
+    </div>
+    <div class="header-right">
+      <div class="pc-pill" id="pcPill">PC</div>
+      <div class="pill" id="pill"><div class="pill-dot"></div><span id="pillLabel">offline</span></div>
+    </div>
+  </header>
+
+  <!-- SETUP -->
+  <div id="setup">
+    <div class="s-icon">📦</div>
+    <div class="s-title">ScanPC</div>
+    <div class="s-sub">Gestione comande e scanner.<br>Inserisci il tuo nome per iniziare.</div>
+    <div class="field">
+      <label>Il tuo nome</label>
+      <input type="text" id="nameInput" placeholder="es. Mario" maxlength="24">
+      <span class="change-name" id="changeName" onclick="clearName()">non sono io →</span>
+    </div>
+    <button class="btn-primary" onclick="startApp()">Entra →</button>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div class="status-bar">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span id="pcStatus" style="color:var(--dim)">PC offline</span>
+      </div>
+      <span id="usersOnline"></span>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tabComBtn" onclick="switchTab('com')">
+        <span class="tab-ico">📋</span><span>Comande</span>
+        <span class="tab-badge" id="comBadge">0</span>
+      </button>
+      <button class="tab-btn" id="tabNewBtn" onclick="switchTab('new')">
+        <span class="tab-ico">＋</span><span>Nuova</span>
+      </button>
+      <button class="tab-btn" id="tabScanBtn" onclick="switchTab('scan')">
+        <span class="tab-ico">▦</span><span>Scansiona</span>
+      </button>
+    </div>
+
+    <!-- ── TAB COMANDE ─────────────────────────────────── -->
+    <div class="tab-panel active" id="tabCom">
+      <div class="list-header">
+        <span class="list-title">Comande ricevute</span>
+        <span class="list-count" id="ordersCount">0</span>
+      </div>
+      <div id="ordersList">
+        <div class="empty-state" id="emptyOrders">
+          <div class="e-ico">📭</div>
+          <p>Nessuna comanda ricevuta.<br>Le comande inviate dal PC appariranno qui.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB NUOVA COMANDA ───────────────────────────── -->
+    <div class="tab-panel" id="tabNew">
+      <div id="newPanel">
+        <div class="new-top">
+          <div class="dest-row">
+            <span class="dest-label">Dest.</span>
+            <select class="dest-select" id="destSelect">
+              <option value="PC">PC (server)</option>
+            </select>
+          </div>
+          <div class="search-row">
+            <input class="search-input" type="text" id="newSearch"
+              placeholder="Cerca per codice o descrizione…"
+              oninput="onSearchInput()" onkeydown="onSearchKey(event)">
+            <button class="sbtn blue" id="btnCod" onclick="doSearch('cod_art')" disabled>COD</button>
+            <button class="sbtn" id="btnDesc" onclick="doSearch('descrizione')" disabled>DESC</button>
+            <button class="sbtn scan-btn" id="btnNewScan" onclick="toggleNewScan()">📷</button>
+          </div>
+        </div>
+
+        <!-- Camera inline nuova comanda -->
+        <div id="newCamView">
+          <video id="newVideo" autoplay playsinline muted></video>
+          <canvas id="newCanvas"></canvas>
+          <div class="vf-overlay">
+            <div class="vf-box">
+              <div class="vf-c tl"></div><div class="vf-c tr"></div>
+              <div class="vf-c bl"></div><div class="vf-c br"></div>
+              <div class="vf-scan-line" id="newVfLine"></div>
+            </div>
+          </div>
+          <div class="vf-flash" id="newFlash"></div>
+          <div class="vf-chip"  id="newChip"></div>
+        </div>
+
+        <div class="search-status-bar">
+          <div class="spinner" id="newSpinner"></div>
+          <span id="newStatusText">Cerca articoli da aggiungere alla comanda</span>
+        </div>
+        <div class="results-header">Risultati: <b id="newResCount">0</b></div>
+        <div id="newResults">
+          <div class="empty-state" style="flex:none;padding:20px 0">
+            <div class="e-ico" style="font-size:28px">🔍</div>
+            <p>Cerca per codice, descrizione<br>o scansiona un barcode/QR</p>
+          </div>
+        </div>
+
+        <!-- Carrello -->
+        <div class="cart-section">
+          <div class="cart-head">
+            <span class="cart-title">Carrello: <span class="cart-count" id="cartCount">0</span> articoli</span>
+            <button class="cart-clear" onclick="clearCart()">Svuota</button>
+          </div>
+          <div id="cartItems">
+            <div style="padding:12px;text-align:center;font-size:12px;color:var(--dim)">
+              Aggiungi articoli dalla ricerca
+            </div>
+          </div>
+          <div class="note-area">
+            <textarea class="note-input" id="orderNote" rows="2" placeholder="Note (opzionale)…"></textarea>
+          </div>
+          <div class="cart-footer">
+            <button class="btn-primary" id="btnSendOrder" onclick="sendOrder()" disabled>
+              Invia comanda
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB SCANSIONA ───────────────────────────────── -->
+    <div class="tab-panel" id="tabScan">
+      <div id="scanPanel">
+        <div id="scanCamView">
+          <video id="scanVideo" autoplay playsinline muted></video>
+          <canvas id="scanCanvas"></canvas>
+          <div class="vf-overlay">
+            <div class="vf-box">
+              <div class="vf-c tl"></div><div class="vf-c tr"></div>
+              <div class="vf-c bl"></div><div class="vf-c br"></div>
+              <div class="vf-scan-line" id="scanVfLine"></div>
+            </div>
+          </div>
+          <div class="vf-flash" id="scanFlash"></div>
+          <div class="vf-chip"  id="scanChip"></div>
+        </div>
+        <div class="scan-area">
+          <button class="btn-scan" id="btnScan" onclick="toggleScan()">
+            <span id="scanBtnIcon">▦</span>
+            <span id="scanBtnLabel">Scansiona codice</span>
+          </button>
+          <div class="scan-hint" id="scanHint">Premi per aprire la fotocamera</div>
+        </div>
+        <div class="scan-toolbar">
+          <div class="counter">Lista: <b id="scanCount">0</b></div>
+          <div class="t-actions">
+            <button class="tbtn" id="btnDup" onclick="toggleDupes()">no dup: ON</button>
+            <button class="tbtn red" id="btnClearScan" onclick="clearScanList()" disabled>svuota</button>
+          </div>
+        </div>
+        <div id="scanList">
+          <div class="empty-state" id="emptyScan">
+            <div class="e-ico">▦</div>
+            <p>Nessun codice scansionato.</p>
+          </div>
+        </div>
+        <div class="send-bar">
+          <button class="btn-primary" id="btnSendScan" onclick="sendScanToPC()" disabled>
+            <span id="sendScanLabel">Invia al PC</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.4/dist/quagga.min.js"></script>
+<script>
+'use strict';
+
+// ══════════════════════════════════════════════════════════════════
+//  STATO GLOBALE
+// ══════════════════════════════════════════════════════════════════
+let ws = null, myName = '', pcOnline = false;
+let registeredUsers = [], onlineUsers = [];
+
+// Comande
+const ordersMap  = new Map();
+let   unreadOrders = 0;
+
+// Carrello nuova comanda
+let cart = [];
+
+// Scanner (tab Scansiona)
+let scanCodes  = [], skipDupes = true;
+
+// Fotocamera nuova comanda
+let newScanActive = false, newStream = null, newRafId = null, newQTimer = null, newQBusy = false;
+
+// Fotocamera tab Scansiona
+let scanActive = false, scanStream = null, scanRafId = null, scanQTimer = null, scanQBusy = false;
+
+const DEBOUNCE = 1400;
+let lastSearchQ = '', lastSearchT = 0;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function uid() { return 'ORD-'+Math.random().toString(36).slice(2,7).toUpperCase()+'-'+Date.now().toString(36).toUpperCase(); }
+function reqId() { return Math.random().toString(36).slice(2)+Date.now().toString(36); }
+
+let toastTm;
+function toast(msg, type='') {
+  const t=$('toast'); t.textContent=msg; t.className='show '+(type||'');
+  clearTimeout(toastTm); toastTm=setTimeout(()=>t.className='',3000);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  SERVICE WORKER + PUSH
+// ══════════════════════════════════════════════════════════════════
+async function initPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js');
+    const res = await fetch('/vapid-public-key');
+    const { key } = await res.json();
+    if (!key) return;
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') return;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true, applicationServerKey: urlB64toUint8(key)
+    });
+    // Invia via WS
+    if (ws && ws.readyState === 1)
+      ws.send(JSON.stringify({ type: 'push_subscribe', subscription: sub }));
+    // Anche via REST
+    await fetch('/register', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ userName: myName, pushSubscription: sub })
+    });
+  } catch(e) { console.warn('[PUSH]', e.message); }
+}
+
+function urlB64toUint8(b64) {
+  const pad = '='.repeat((4-b64.length%4)%4);
+  const raw = atob((b64+pad).replace(/-/g,'+').replace(/_/g,'/'));
+  return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  SETUP
+// ══════════════════════════════════════════════════════════════════
+function clearName() { localStorage.removeItem('scanpc_name'); $('nameInput').value=''; $('changeName').style.display='none'; }
+
+async function startApp() {
+  myName = ($('nameInput').value||'').trim() || 'Utente';
+  localStorage.setItem('scanpc_name', myName);
+  // Registra utente sul server
+  try { await fetch('/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({userName:myName}) }); } catch(_){}
+  $('setup').style.display='none';
+  $('main').classList.add('show');
+  connectWS();
+  initPush();
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════════════════════════════
+let curTab = 'com';
+function switchTab(tab) {
+  if (newScanActive) stopNewScan();
+  if (scanActive)    stopScan();
+  curTab = tab;
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  $('tab'+cap(tab)).classList.add('active');
+  $('tab'+cap(tab)+'Btn').classList.add('active');
+  if (tab==='com') { unreadOrders=0; updateOrdersBadge(); }
+}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
+
+// ══════════════════════════════════════════════════════════════════
+//  WEBSOCKET
+// ══════════════════════════════════════════════════════════════════
+function connectWS() {
+  try {
+    const proto = location.protocol==='https:'?'wss:':'ws:';
+    ws = new WebSocket(`${proto}//${location.host}?type=web&name=${encodeURIComponent(myName)}`);
+    ws.onopen = () => { $('pill').classList.add('on'); $('pillLabel').textContent='connesso'; };
+    ws.onmessage = e => { try { handleMsg(JSON.parse(e.data)); } catch(_){} };
+    ws.onclose = () => { $('pill').classList.remove('on'); $('pillLabel').textContent='offline'; setTimeout(connectWS,4000); };
+    ws.onerror = () => { $('pill').classList.remove('on'); $('pillLabel').textContent='offline'; };
+  } catch(_){ setTimeout(connectWS,4000); }
+}
+
+function handleMsg(msg) {
+  switch(msg.type) {
+    case 'user_list':
+      pcOnline = !!msg.pcConnected;
+      onlineUsers = msg.online||[];
+      registeredUsers = msg.registered||[];
+      updateStatusBar();
+      updateDestSelect();
+      break;
+    case 'search_response':   onSearchResponse(msg); break;
+    case 'new_order':         onOrderReceived(msg.order); break;
+    case 'order_confirm':     onOrderConfirmed(msg); break;
+    case 'order_queued':      toast(`📬 Comanda accodata per ${msg.destination}`, 'info'); break;
+    case 'order_modified_notify': toast(`✏ Comanda modificata da ${msg.modified_by}`, 'warn'); break;
+    case 'batch_ack':         toast(`✓ ${msg.count} codici ricevuti`, 'ok'); break;
+    case 'error':             toast('⚠ '+msg.message, 'err'); break;
+  }
+}
+
+function updateStatusBar() {
+  $('pcStatus').textContent = pcOnline ? 'PC connesso' : 'PC offline';
+  $('pcStatus').style.color = pcOnline ? 'var(--green)' : 'var(--dim)';
+  $('pcPill').textContent   = pcOnline ? '● PC' : 'PC';
+  $('pcPill').className     = pcOnline ? 'pc-pill on' : 'pc-pill';
+  const others = onlineUsers.filter(u=>u!==myName);
+  $('usersOnline').textContent = others.length ? '👥 '+others.join(', ') : '';
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  DESTINATARI (utenti registrati)
+// ══════════════════════════════════════════════════════════════════
+function updateDestSelect() {
+  const sel=$('destSelect'), cur=sel.value;
+  sel.innerHTML='<option value="PC">PC (server)</option>';
+  // Mostra tutti i registrati (anche offline) con indicatore
+  registeredUsers.filter(u=>u!==myName).forEach(u => {
+    const opt=document.createElement('option');
+    opt.value=u;
+    opt.textContent = onlineUsers.includes(u) ? u+' ●' : u+' ○';
+    sel.appendChild(opt);
+  });
+  if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  COMANDE RICEVUTE
+// ══════════════════════════════════════════════════════════════════
+function onOrderReceived(order) {
+  ordersMap.set(order.order_id, order);
+  if (curTab!=='com') { unreadOrders++; updateOrdersBadge(); }
+  renderOrders();
+  toast(`📦 Nuova comanda da ${order.created_by}`, 'info');
+  try { new Audio('data:audio/wav;base64,//uQRAAAAW...').play(); } catch(_){}
+}
+function onOrderConfirmed(msg) {
+  const o=ordersMap.get(msg.order_id);
+  if(o){o.status='confirmed';renderOrders();}
+  toast('✅ Comanda confermata dal PC','ok');
+}
+function updateOrdersBadge() {
+  const b=$('comBadge');
+  b.textContent=unreadOrders; b.classList.toggle('show',unreadOrders>0);
+  $('ordersCount').textContent=ordersMap.size;
+}
+function renderOrders() {
+  const c=$('ordersList');
+  [...c.children].forEach(el=>{if(el.id!=='emptyOrders')el.remove();});
+  $('emptyOrders').style.display=ordersMap.size?'none':'flex';
+  $('ordersCount').textContent=ordersMap.size;
+  [...ordersMap.values()].sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp))
+    .forEach(o=>c.appendChild(buildOrderCard(o)));
+}
+
+function buildOrderCard(order) {
+  const card=document.createElement('div');
+  card.className='order-card'+(order.status==='pending'?' new':'');
+  card.id='card-'+order.order_id;
+  const ts=new Date(order.timestamp).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  const statusMap={pending:'in attesa',modified:'modificata',confirmed:'confermata'};
+  const itemsHtml=(order.items||[]).map((it,i)=>`
+    <div class="oc-item">
+      <div class="oc-cod">${esc(it.cod_art)}</div>
+      <div class="oc-desc">${esc(it.descrizione)}</div>
+      <div class="qty-row">
+        <button class="qty-btn" onclick="chgOcQty('${order.order_id}',${i},-1)">−</button>
+        <div class="qty-val" id="oqv-${order.order_id}-${i}">${it.qty}</div>
+        <button class="qty-btn" onclick="chgOcQty('${order.order_id}',${i},+1)">+</button>
+      </div>
+      <button class="item-del" onclick="rmOcItem('${order.order_id}',${i})">×</button>
+    </div>`).join('');
+  card.innerHTML=`
+    <div class="oc-head" onclick="toggleCard('${order.order_id}')">
+      <div><div class="oc-from">Da: ${esc(order.created_by)}</div><div class="oc-id">${order.order_id}</div></div>
+      <div class="oc-status ${order.status}">${statusMap[order.status]||order.status}</div>
+    </div>
+    <div class="oc-body" id="body-${order.order_id}">
+      ${order.note?`<div class="oc-note">📝 ${esc(order.note)}</div>`:''}
+      <div class="oc-items">${itemsHtml}</div>
+      <div class="oc-time">${ts}</div>
+      <div class="oc-footer">
+        <button class="oc-btn" onclick="reinoltra('${order.order_id}')">↩ Reinoltra al PC</button>
+        <button class="oc-btn success" onclick="confirmOrder('${order.order_id}')">✓ OK</button>
+      </div>
+    </div>`;
+  return card;
+}
+function toggleCard(id){const b=$('body-'+id);b.style.display=b.style.display==='none'?'':'none';}
+function chgOcQty(oid,i,d){const o=ordersMap.get(oid);if(!o)return;o.items[i].qty=Math.max(1,o.items[i].qty+d);const el=$(`oqv-${oid}-${i}`);if(el)el.textContent=o.items[i].qty;o.status='modified';}
+function rmOcItem(oid,i){const o=ordersMap.get(oid);if(!o)return;o.items.splice(i,1);o.status='modified';renderOrders();}
+function reinoltra(oid){
+  const o=ordersMap.get(oid);if(!o)return;
+  if(!ws||ws.readyState!==1){toast('⚠ Non connesso','warn');return;}
+  o.status='modified';o.modified_by=myName;
+  ws.send(JSON.stringify({type:'order_update',order:o}));
+  toast('↩ Reinoltrata al PC','ok');
+}
+function confirmOrder(oid){ordersMap.delete(oid);renderOrders();toast('✓ Rimossa dalla lista','ok');}
+
+// ══════════════════════════════════════════════════════════════════
+//  NUOVA COMANDA — RICERCA
+// ══════════════════════════════════════════════════════════════════
+function onSearchInput(){const has=$('newSearch').value.trim().length>0;$('btnCod').disabled=!has;$('btnDesc').disabled=!has;}
+function onSearchKey(e){if(e.key==='Enter')doSearch('cod_art');}
+
+function doSearch(type) {
+  const q=$('newSearch').value.trim();
+  if(!q)return;
+  const now=Date.now();
+  if(q===lastSearchQ&&now-lastSearchT<DEBOUNCE)return;
+  lastSearchQ=q;lastSearchT=now;
+  if(!ws||ws.readyState!==1){toast('⚠ Non connesso','warn');return;}
+  if(!pcOnline){toast('⚠ PC non connesso','warn');return;}
+  setSearchStatus(`Ricerca "${q}"…`,true);
+  ws.send(JSON.stringify({type:'search_request',request_id:reqId(),search_type:type,query:q,source:'manual'}));
+}
+
+function onSearchResponse(msg) {
+  const results=msg.results||[];
+  $('newResCount').textContent=results.length;
+  if(msg.error&&msg.error!==''){setSearchStatus('⚠ '+msg.error,false);return;}
+  setSearchStatus(`${results.length} risultato/i`,false);
+  const c=$('newResults');c.innerHTML='';
+  if(!results.length){
+    c.innerHTML='<div class="empty-state" style="flex:none;padding:16px 0"><div class="e-ico" style="font-size:24px">🔍</div><p>Nessun risultato</p></div>';
+    return;
+  }
+  results.forEach(a=>{
+    const row=document.createElement('div');row.className='result-row';
+    row.innerHTML=`<div class="r-cod">${esc(a.cod_art)}</div><div class="r-desc">${esc(a.descrizione)}</div><button class="r-add" onclick="addToCart('${esc(a.cod_art)}','${esc(a.descrizione)}')">+</button>`;
+    c.appendChild(row);
+  });
+}
+
+function setSearchStatus(text,loading){$('newStatusText').textContent=text;$('newSpinner').classList.toggle('show',loading);}
+
+// ── Fotocamera NUOVA COMANDA ──────────────────────────────────────
+async function toggleNewScan() {
+  if(newScanActive) stopNewScan(); else await startNewScan();
+}
+
+async function startNewScan() {
+  try {
+    newStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});
+    const vid=$('newVideo');vid.srcObject=newStream;await vid.play();
+    const cv=$('newCamView');cv.style.height=Math.round(window.innerHeight*.28)+'px';cv.classList.add('show');
+    $('newVfLine').classList.add('animate');
+    newScanActive=true;
+    $('btnNewScan').textContent='⏹';$('btnNewScan').classList.add('scanning');
+    startJsQR('newVideo','newCanvas',v=>onNewScanDetected(v,'QR'),()=>newScanActive,id=>newRafId=id);
+    startQuagga('newCanvas',()=>newScanActive,()=>newQBusy,v=>newQBusy=v,r=>onNewScanDetected(r.code,fmtFmt(r.format)),id=>newQTimer=id);
+  } catch(e){toast('⚠ Fotocamera: '+e.message,'err');}
+}
+
+function stopNewScan() {
+  newScanActive=false;
+  if(newRafId){cancelAnimationFrame(newRafId);newRafId=null;}
+  if(newQTimer){clearInterval(newQTimer);newQTimer=null;}
+  newQBusy=false;
+  if(newStream){newStream.getTracks().forEach(t=>t.stop());newStream=null;}
+  $('newVideo').srcObject=null;
+  $('newCamView').classList.remove('show');
+  $('newVfLine').classList.remove('animate');
+  $('btnNewScan').textContent='📷';$('btnNewScan').classList.remove('scanning');
+}
+
+function onNewScanDetected(value, type) {
+  if(!value||typeof value!=='string')return;
+  flash('newFlash');vibrate();chip('newChip','✓ '+value);
+  stopNewScan();
+  // Determina tipo ricerca
+  const searchType = type==='QR'?'cod_art':(type.startsWith('EAN')||type.startsWith('UPC')?'barcode':'cod_art');
+  $('newSearch').value=value;
+  $('btnCod').disabled=false;$('btnDesc').disabled=false;
+  lastSearchQ='';lastSearchT=0; // reset debounce per ricerca automatica
+  if(!ws||ws.readyState!==1){toast('⚠ Non connesso','warn');return;}
+  if(!pcOnline){toast('⚠ PC non connesso — codice inserito nel campo','warn');return;}
+  setSearchStatus(`Ricerca "${value}"…`,true);
+  ws.send(JSON.stringify({type:'search_request',request_id:reqId(),search_type:searchType,query:value,source:type.toLowerCase()}));
+  lastSearchQ=value;lastSearchT=Date.now();
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  CARRELLO
+// ══════════════════════════════════════════════════════════════════
+function addToCart(cod,desc){
+  const ex=cart.find(c=>c.cod_art===cod);
+  if(ex){ex.qty++;renderCart();return;}
+  cart.push({cod_art:cod,descrizione:desc,qty:1});
+  renderCart();toast('✓ '+cod+' aggiunto','ok');
+}
+function renderCart(){
+  const c=$('cartItems');c.innerHTML='';
+  $('cartCount').textContent=cart.length;
+  $('btnSendOrder').disabled=cart.length===0;
+  if(!cart.length){c.innerHTML='<div style="padding:12px;text-align:center;font-size:12px;color:var(--dim)">Aggiungi articoli dalla ricerca</div>';return;}
+  cart.forEach((it,i)=>{
+    const d=document.createElement('div');d.className='cart-item';
+    d.innerHTML=`<div class="ci-cod">${esc(it.cod_art)}</div><div class="ci-desc">${esc(it.descrizione)}</div>
+      <div class="ci-qty">
+        <button class="ci-qbtn" onclick="cartQty(${i},-1)">−</button>
+        <div class="ci-qval" id="cq-${i}">${it.qty}</div>
+        <button class="ci-qbtn" onclick="cartQty(${i},+1)">+</button>
+      </div>
+      <button class="ci-del" onclick="cartDel(${i})">×</button>`;
+    c.appendChild(d);
+  });
+}
+function cartQty(i,d){cart[i].qty=Math.max(1,cart[i].qty+d);const el=$('cq-'+i);if(el)el.textContent=cart[i].qty;}
+function cartDel(i){cart.splice(i,1);renderCart();}
+function clearCart(){cart=[];renderCart();}
+
+function sendOrder(){
+  if(!cart.length)return;
+  if(!ws||ws.readyState!==1){toast('⚠ Non connesso','warn');return;}
+  const dest=$('destSelect').value;
+  // Controlla se dest è online per mostrare avviso (ma invia comunque)
+  const destOnline = dest==='PC'||onlineUsers.includes(dest);
+  const order={
+    order_id:uid(),created_by:myName,destination:dest,
+    status:'pending',items:[...cart.map(c=>({...c}))],
+    note:$('orderNote').value.trim(),timestamp:new Date().toISOString()
+  };
+  ws.send(JSON.stringify({type:'new_order',order}));
+  if(!destOnline&&dest!=='PC'){
+    toast(`📬 Comanda accodata per ${dest} (offline)`,'info');
+  } else {
+    toast(`📤 Comanda inviata a ${dest}`,'ok');
+  }
+  clearCart();$('orderNote').value='';
+  $('newSearch').value='';$('newResults').innerHTML='';
+  $('newResCount').textContent='0';
+  setSearchStatus('Cerca articoli per aggiungerli alla comanda',false);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  TAB SCANSIONA
+// ══════════════════════════════════════════════════════════════════
+async function toggleScan(){if(scanActive)stopScan();else await startScan();}
+
+async function startScan(){
+  try {
+    scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});
+    const vid=$('scanVideo');vid.srcObject=scanStream;await vid.play();
+    $('scanCamView').style.height=Math.round(window.innerHeight*.36)+'px';
+    $('scanCamView').classList.add('show');$('scanVfLine').classList.add('animate');
+    scanActive=true;
+    $('btnScan').classList.add('stop');$('scanBtnIcon').textContent='⏹';
+    $('scanBtnLabel').textContent='Stop';$('scanHint').textContent='Inquadra QR o barcode…';
+    startJsQR('scanVideo','scanCanvas',v=>onScanDetected(v,'QR'),()=>scanActive,id=>scanRafId=id);
+    startQuagga('scanCanvas',()=>scanActive,()=>scanQBusy,v=>scanQBusy=v,r=>onScanDetected(r.code,fmtFmt(r.format)),id=>scanQTimer=id);
+  } catch(e){toast('⚠ '+e.message,'err');}
+}
+
+function stopScan(){
+  scanActive=false;
+  if(scanRafId){cancelAnimationFrame(scanRafId);scanRafId=null;}
+  if(scanQTimer){clearInterval(scanQTimer);scanQTimer=null;}
+  scanQBusy=false;
+  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}
+  $('scanVideo').srcObject=null;
+  $('scanCamView').classList.remove('show');$('scanVfLine').classList.remove('animate');
+  $('btnScan').classList.remove('stop');$('scanBtnIcon').textContent='▦';
+  $('scanBtnLabel').textContent='Scansiona codice';$('scanHint').textContent='Premi per aprire la fotocamera';
+}
+
+function onScanDetected(value,type){
+  if(!value||typeof value!=='string')return;
+  if(skipDupes&&scanCodes.some(c=>c.value===value)){toast('Duplicato: '+value,'warn');stopScan();return;}
+  flash('scanFlash');vibrate();chip('scanChip','✓ '+value);
+  scanCodes.unshift({value,type,time:new Date()});
+  stopScan();renderScanList();updateScanBtns();
+}
+
+function renderScanList(){
+  const c=$('scanList');
+  [...c.children].forEach(el=>{if(el.id!=='emptyScan')el.remove();});
+  $('emptyScan').style.display=scanCodes.length?'none':'flex';
+  scanCodes.forEach((sc,i)=>{
+    const t=sc.type.toLowerCase().replace(/[^a-z0-9]/g,'');
+    const bc=t==='qr'?'qr':(t.startsWith('ean')||t.startsWith('upc'))?'ean':'code';
+    const d=document.createElement('div');d.className='scan-item';
+    d.innerHTML=`<div class="si-n">${scanCodes.length-i}</div>
+      <div class="badge ${bc}">${sc.type}</div>
+      <div class="si-val" title="${esc(sc.value)}">${esc(sc.value)}</div>
+      <div class="si-time">${sc.time.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}</div>
+      <button class="si-del" onclick="rmScan(${i})">×</button>`;
+    c.appendChild(d);
+  });
+  $('scanCount').textContent=scanCodes.length;
+}
+function rmScan(i){scanCodes.splice(i,1);renderScanList();updateScanBtns();}
+function clearScanList(){scanCodes=[];renderScanList();updateScanBtns();}
+function updateScanBtns(){const h=scanCodes.length>0;$('btnClearScan').disabled=!h;$('btnSendScan').disabled=!h;$('sendScanLabel').textContent=h?`Invia ${scanCodes.length} codice/i al PC`:'Invia al PC';}
+function toggleDupes(){skipDupes=!skipDupes;$('btnDup').textContent=`no dup: ${skipDupes?'ON':'OFF'}`;}
+
+function sendScanToPC(){
+  if(!ws||ws.readyState!==1){toast('⚠ Non connesso','warn');return;}
+  if(!pcOnline){toast('⚠ PC non connesso','warn');return;}
+  if(!scanCodes.length)return;
+  ws.send(JSON.stringify({type:'scan_batch',device:myName,total:scanCodes.length,
+    codes:scanCodes.map(c=>({value:c.value,barcode_type:c.type,scanned_at:c.time.toISOString()}))}));
+  toast(`📤 Invio ${scanCodes.length} codice/i…`,'warn');
+  setTimeout(()=>{scanCodes=[];renderScanList();updateScanBtns();},500);
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  MOTORI SCAN (riusabili per entrambe le camere)
+// ══════════════════════════════════════════════════════════════════
+function startJsQR(videoId,canvasId,onFound,isActive,setRaf){
+  const vid=$(videoId),cv=$(canvasId);
+  const ctx=cv.getContext('2d',{willReadFrequently:true});
+  function tick(){
+    if(!isActive())return;
+    if(vid.readyState===vid.HAVE_ENOUGH_DATA){
+      cv.width=vid.videoWidth;cv.height=vid.videoHeight;
+      ctx.drawImage(vid,0,0,cv.width,cv.height);
+      let id=ctx.getImageData(0,0,cv.width,cv.height);
+      let qr=jsQR(id.data,id.width,id.height,{inversionAttempts:'dontInvert'});
+      if(qr&&qr.data){onFound(qr.data);return;}
+      const r=rotCv(cv,90);id=r.getContext('2d').getImageData(0,0,r.width,r.height);
+      qr=jsQR(id.data,id.width,id.height,{inversionAttempts:'dontInvert'});
+      if(qr&&qr.data){onFound(qr.data);return;}
+    }
+    setRaf(requestAnimationFrame(tick));
+  }
+  setRaf(requestAnimationFrame(tick));
+}
+
+function startQuagga(canvasId,isActive,isBusy,setBusy,onFound,setTimer){
+  const READERS=['ean_reader','ean_8_reader','upc_reader','upc_e_reader','code_128_reader','code_39_reader','code_93_reader','codabar_reader','i2of5_reader'];
+  const tryD=(src,cb)=>Quagga.decodeSingle({src,numOfWorkers:0,inputStream:{size:800},locator:{patchSize:'medium',halfSample:true},decoder:{readers:READERS},locate:true},cb);
+  setTimer(setInterval(()=>{
+    if(!isActive()||isBusy())return;
+    const cv=$(canvasId);if(!cv.width)return;setBusy(true);
+    tryD(cv.toDataURL('image/jpeg',.85),r1=>{
+      if(r1&&r1.codeResult&&r1.codeResult.code){setBusy(false);onFound({code:r1.codeResult.code,format:r1.codeResult.format});return;}
+      if(!isActive()){setBusy(false);return;}
+      tryD(rotCv($(canvasId),90).toDataURL('image/jpeg',.85),r2=>{
+        setBusy(false);
+        if(r2&&r2.codeResult&&r2.codeResult.code)onFound({code:r2.codeResult.code,format:r2.codeResult.format});
+      });
+    });
+  },400));
+}
+
+function rotCv(src,deg){
+  const w=src.width,h=src.height,c=document.createElement('canvas');
+  if(deg===90||deg===270){c.width=h;c.height=w;}else{c.width=w;c.height=h;}
+  const ctx=c.getContext('2d');ctx.translate(c.width/2,c.height/2);ctx.rotate(deg*Math.PI/180);ctx.drawImage(src,-w/2,-h/2);return c;
+}
+
+function fmtFmt(f){
+  if(!f)return'BARCODE';
+  const m={ean_13:'EAN13',ean_8:'EAN8',upc_a:'UPC-A',upc_e:'UPC-E',code_128:'CODE128',code_39:'CODE39',code_93:'CODE93',codabar:'CODABAR',i2of5:'ITF'};
+  return m[f.toLowerCase()]||f.toUpperCase().slice(0,8);
+}
+
+function flash(id){const el=$(id);el.classList.add('on');setTimeout(()=>el.classList.remove('on'),130);}
+function vibrate(){if(navigator.vibrate)navigator.vibrate(80);}
+function chip(id,text){const c=$(id);c.textContent=text;c.classList.add('show');clearTimeout(c._t);c._t=setTimeout(()=>c.classList.remove('show'),2500);}
+
+// ══════════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════════
+(()=>{
+  const saved=localStorage.getItem('scanpc_name');
+  if(saved){$('nameInput').value=saved;$('changeName').style.display='block';}
+})();
+</script>
+</body>
+</html>
