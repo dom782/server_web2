@@ -143,10 +143,7 @@ app.get('/auth/verify', authMiddleware, (req, res) => {
   res.json({ ok: true, userName: req.user.userName });
 });
 
-// Lista utenti registrati (richiede auth)
-app.get('/registered-users', authMiddleware, (req, res) => {
-  res.json({ users: Object.keys(users) });
-});
+
 
 // Aggiorna push subscription (richiede auth)
 app.post('/push-subscribe', authMiddleware, (req, res) => {
@@ -160,6 +157,18 @@ app.post('/push-subscribe', authMiddleware, (req, res) => {
 });
 
 // Elimina utente (solo admin, futuro)
+
+// Lista utenti registrati — accessibile con JWT utente OPPURE con PC_TOKEN (client Java)
+app.get('/registered-users', (req, res) => {
+  const pcToken = process.env.PC_TOKEN || 'scanpc-pc-client';
+  const auth    = (req.headers['authorization'] || '').replace('Bearer ', '');
+  let allowed   = false;
+  if (auth === pcToken) { allowed = true; }
+  else { try { jwt.verify(auth, JWT_SECRET); allowed = true; } catch (_) {} }
+  if (!allowed) return res.status(401).json({ error: 'Non autorizzato' });
+  res.json({ users: Object.keys(users) });
+});
+
 app.delete('/auth/user/:name', authMiddleware, (req, res) => {
   const { name } = req.params;
   if (req.user.userName !== name && req.user.userName !== 'admin')
