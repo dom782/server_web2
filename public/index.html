@@ -823,6 +823,9 @@ function buildOpItem(order,it,idx){
   btnP.addEventListener('click',()=>{it.qty=round((it.qty||1)+(it.step||1));inp.value=fmtQty(it.qty);updateConv();});
   inp.addEventListener('change',applyInp);inp.addEventListener('blur',applyInp);
   umSel.addEventListener('change',()=>{it.unitaMisura=umSel.value;updateConv();});
+  // Salva la lista UM sull'item per quando viene reinoltrato
+  if(!it.umList&&umList.length)it.umList=umList;
+  if(!it.unita_misura_list&&umList.length)it.unita_misura_list=umList;
 
   qtyRow.appendChild(btnM);qtyRow.appendChild(inp);qtyRow.appendChild(btnP);qtyRow.appendChild(umSel);
   updateConv();
@@ -888,7 +891,7 @@ function onSearchResponse(msg){
     $('spSpinner').classList.remove('show');
     if(msg.error&&msg.error!==''){toast('⚠ '+msg.error,'err');return}
     if(!results.length){toast('Nessun articolo trovato per questo codice','warn');return}
-    if(results.length===1){addToCart(results[0].cod_art,results[0].descrizione,results[0].unita_misura_list||[]);toast(`✓ ${results[0].cod_art} aggiunto`,'ok');return}
+    if(results.length===1){addToCart(results[0].cod_art,results[0].descrizione,results[0].unita_misura_list||[],results[0].cod_un_mis_base||'',results[0].fattori_conversione||{});toast(`✓ ${results[0].cod_art} aggiunto`,'ok');return}
     // Più risultati → apri pagina
     spMode='cod_art';$('spTitle').textContent='Risultati scansione';$('spInput').value=msg.query||'';
     $('spCount').textContent=results.length+' risultati';$('spStatusTxt').textContent=results.length+' risultati';
@@ -928,8 +931,13 @@ function buildSpResult(a){
   btn.id = 'spbtn-' + a.cod_art;
   btn.textContent = '+';
   btn.addEventListener('click', () => {
-    // 'a' è disponibile nella closure — include unita_misura_list correttamente
-    addToCart(a.cod_art, a.descrizione, a.unita_misura_list || []);
+    // 'a' è disponibile nella closure — include tutti i campi UM e fattori
+    addToCart(
+      a.cod_art, a.descrizione,
+      a.unita_misura_list || [],
+      a.cod_un_mis_base || '',
+      a.fattori_conversione || {}
+    );
     btn.textContent = '✓'; btn.classList.add('added');
     setTimeout(() => { btn.textContent = '+'; btn.classList.remove('added'); }, 1400);
     toast(`✓ ${a.cod_art} aggiunto al carrello`, 'ok');
@@ -1018,11 +1026,19 @@ function doChip(t){const c=$('vfChip');c.textContent=t;c.classList.add('show');c
 // ════════════════════════════════════════════════════════════
 // CARRELLO
 // ════════════════════════════════════════════════════════════
-function addToCart(cod,desc,umList){
+function addToCart(cod,desc,umList,umBase,fattori){
   const ex=cart.find(c=>c.cod_art===cod);
   if(ex){ex.qty=round(ex.qty+ex.step);renderCart();return}
   const um=(umList&&umList.length)?umList[0]:'';
-  cart.push({cod_art:cod,descrizione:desc,qty:1,step:1,unitaMisura:um,nota:'',umList:umList||[]});
+  cart.push({
+    cod_art:cod, descrizione:desc,
+    qty:1, step:1,
+    unitaMisura:um,
+    nota:'',
+    umList:umList||[],
+    umBase:umBase||um,
+    fattoriConversione:fattori||{}
+  });
   renderCart();
 }
 function round(v){return Math.round(v*1e10)/1e10}
@@ -1064,7 +1080,16 @@ function sendOrder(){
   const destRaw=$('destSelect').value;
   const dest=destRaw.replace(/\s+[●○]$/,'').trim();
   const order={order_id:uid(),created_by:myName,destination:dest,status:'pending',
-    items:cart.map(c=>({cod_art:c.cod_art,descrizione:c.descrizione,qty:c.qty,unitaMisura:c.unitaMisura||'',nota:c.nota||''})),
+    items:cart.map(c=>({
+      cod_art:             c.cod_art,
+      descrizione:         c.descrizione,
+      qty:                 c.qty,
+      unitaMisura:         c.unitaMisura||'',
+      nota:                c.nota||'',
+      um_base:             c.umBase||'',
+      unita_misura_list:   c.umList||[],
+      fattori_conversione: c.fattoriConversione||c.fattori_conversione||{}
+    })),
     note:$('orderNote').value.trim(),timestamp:new Date().toISOString()};
   ws.send(JSON.stringify({type:'new_order',order}));
   const offline=destRaw.endsWith(' ○');
