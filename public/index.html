@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ScanPC">
+<meta name="theme-color" content="#2563eb">
+<link rel="manifest" href="/manifest.json">
+<title>ScanPC</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f0f4ff;--s1:#fff;--s2:#f8faff;--s3:#edf2ff;
+  --border:#dde3f0;--border2:#c5d0e8;
+  --blue:#2563eb;--blue-l:#3b82f6;--blue-d:#1d4ed8;
+  --blue-bg:#eff6ff;--blue-dim:#93c5fd;
+  --green:#16a34a;--green-bg:#f0fdf4;
+  --red:#dc2626;--red-bg:#fef2f2;
+  --orange:#ea580c;
+  --text:#1e293b;--text2:#475569;--dim:#94a3b8;
+  --mono:'JetBrains Mono',monospace;--sans:'Inter',sans-serif;
+  --r:12px;--r-sm:8px;
+  --sh:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+  --sh-md:0 4px 12px rgba(0,0,0,.1);
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none}
+#app{display:flex;flex-direction:column;height:100dvh;max-width:480px;margin:0 auto}
+
+/* ── AUTH SCREENS ─────────────────────────────────────────────── */
+.auth-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 24px;gap:0;background:var(--bg)}
+.auth-card{width:100%;max-width:380px;background:var(--s1);border-radius:16px;box-shadow:0 4px 24px rgba(37,99,235,.1),0 1px 4px rgba(0,0,0,.06);overflow:hidden}
+.auth-header{background:var(--blue);padding:24px;text-align:center}
+.auth-logo{font-size:40px;margin-bottom:8px}
+.auth-title{font-size:20px;font-weight:700;color:#fff;letter-spacing:.5px}
+.auth-subtitle{font-size:12px;color:rgba(255,255,255,.75);margin-top:4px;font-family:var(--mono)}
+.auth-body{padding:24px;display:flex;flex-direction:column;gap:14px}
+.auth-tabs{display:flex;background:var(--s2);border-radius:var(--r-sm);padding:3px;gap:3px;margin-bottom:4px}
+.auth-tab{flex:1;padding:8px;border:none;background:none;border-radius:6px;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--dim);cursor:pointer;transition:all .15s}
+.auth-tab.active{background:var(--s1);color:var(--blue);font-weight:700;box-shadow:var(--sh)}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+.field input{padding:11px 13px;background:var(--s2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:var(--sans);font-size:14px;outline:none;transition:border-color .2s}
+.field input:focus{border-color:var(--blue);background:var(--s1)}
+.btn-auth{width:100%;padding:12px;border:none;border-radius:var(--r-sm);background:var(--blue);color:#fff;font-family:var(--sans);font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(37,99,235,.35);transition:background .15s,transform .1s;margin-top:4px}
+.btn-auth:active{background:var(--blue-d);transform:scale(.99)}
+.btn-auth:disabled{background:var(--dim);box-shadow:none;cursor:default;transform:none}
+.auth-error{font-size:12px;color:var(--red);background:var(--red-bg);border:1px solid #fca5a5;border-radius:var(--r-sm);padding:8px 12px;display:none}
+.auth-error.show{display:block}
+.auth-spinner{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:none;margin:0 auto}
+.auth-spinner.show{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.auth-footer{text-align:center;padding:0 24px 20px;font-size:12px;color:var(--dim)}
+
+/* ── HEADER ────────────────────────────────────────────────────── */
+header{display:flex;align-items:center;justify-content:space-between;padding:0 14px;min-height:50px;background:var(--blue);flex-shrink:0}
+.brand{display:flex;align-items:center;gap:9px}
+.brand-icon{width:28px;height:28px;background:rgba(255,255,255,.2);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.brand-name{font-family:var(--mono);font-size:13px;letter-spacing:2px;color:#fff;font-weight:500}
+.header-right{display:flex;align-items:center;gap:8px}
+.user-chip{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,.2);font-family:var(--mono);font-size:11px;color:#fff;font-weight:500}
+.pill{display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;background:rgba(255,255,255,.15);font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.75);transition:all .25s}
+.pill.on{background:rgba(255,255,255,.25);color:#fff}
+.pill-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.logout-btn{width:28px;height:28px;border:none;background:rgba(255,255,255,.15);border-radius:7px;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.logout-btn:active{background:rgba(255,255,255,.3)}
+
+/* ── MAIN ──────────────────────────────────────────────────────── */
+#main{flex:1;display:none;flex-direction:column;overflow:hidden}
+#main.show{display:flex}
+.status-bar{display:flex;align-items:center;justify-content:space-between;padding:4px 14px;background:var(--s1);border-bottom:1px solid var(--border);font-size:10px;flex-shrink:0}
+#pcStatusLabel{font-family:var(--mono);font-size:10px;color:var(--dim)}
+#usersOnlineLabel{font-family:var(--mono);font-size:10px;color:var(--text2)}
+
+/* ── TABS ──────────────────────────────────────────────────────── */
+.tab-bar{display:flex;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0}
+.tab-btn{flex:1;padding:10px 4px;border:none;background:none;color:var(--dim);font-family:var(--sans);font-size:11px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;border-bottom:2.5px solid transparent;transition:color .15s,border-color .15s;position:relative}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab-ico{font-size:16px}
+.tab-badge{position:absolute;top:5px;right:calc(50% - 18px);background:var(--red);color:#fff;font-size:9px;font-weight:700;font-family:var(--mono);padding:1px 5px;border-radius:10px;min-width:16px;text-align:center;display:none}
+.tab-badge.show{display:block}
+.tab-panel{flex:1;display:none;flex-direction:column;overflow:hidden}
+.tab-panel.active{display:flex}
+
+/* ── TAB COMANDE ───────────────────────────────────────────────── */
+.list-header{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0}
+.list-title{font-size:12px;font-weight:600;color:var(--text2)}
+.list-count{font-family:var(--mono);font-size:11px;color:var(--blue);font-weight:700}
+#ordersList{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+#ordersList::-webkit-scrollbar{width:3px}
+#ordersList::-webkit-scrollbar-thumb{background:var(--border)}
+.order-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;animation:slideIn .15s ease}
+.order-card.isnew{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+@keyframes slideIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+.oc-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--blue-bg);cursor:pointer}
+.oc-from{font-size:13px;font-weight:700;color:var(--text)}
+.oc-id{font-family:var(--mono);font-size:10px;color:var(--dim);margin-top:2px}
+.oc-status{font-family:var(--mono);font-size:9px;padding:3px 9px;border-radius:20px;font-weight:600}
+.oc-status.pending{background:var(--blue-bg);border:1px solid var(--blue-dim);color:var(--blue)}
+.oc-status.modified{background:#fef3c7;border:1px solid #fcd34d;color:#92400e}
+.oc-status.confirmed{background:var(--green-bg);border:1px solid #86efac;color:var(--green)}
+.oc-body{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.oc-note{font-size:12px;color:var(--text2);font-style:italic;padding:7px 10px;background:var(--blue-bg);border-radius:var(--r-sm);border-left:3px solid var(--blue-dim)}
+.oc-item{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm)}
+.oc-cod{font-family:var(--mono);font-size:11px;color:var(--blue);min-width:72px;font-weight:600}
+.oc-desc{flex:1;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qty-row{display:flex;align-items:center;gap:3px}
+.qty-btn{width:22px;height:22px;border:1px solid var(--border);background:var(--s1);color:var(--text);border-radius:5px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.qty-val{font-family:var(--mono);font-size:12px;min-width:22px;text-align:center}
+.item-del{width:20px;height:20px;border:none;background:none;color:var(--dim);font-size:13px;cursor:pointer;flex-shrink:0}
+.oc-footer{display:flex;gap:7px;padding-top:2px}
+.oc-btn{flex:1;padding:8px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--s2);color:var(--text);font-size:12px;font-weight:500;cursor:pointer}
+.oc-btn.primary{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
+.oc-time{font-family:var(--mono);font-size:9px;color:var(--dim);text-align:right}
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--dim);text-align:center;padding:30px}
+.empty-state .e-ico{font-size:38px;opacity:.2}
+.empty-state p{font-size:13px;line-height:1.7;color:var(--text2)}
+
+/* ── TAB NUOVA ─────────────────────────────────────────────────── */
+.new-top{padding:12px 14px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:10px}
+.dest-row{display:flex;align-items:center;gap:8px}
+.dest-label{font-size:11px;font-weight:700;color:var(--text2);white-space:nowrap;text-transform:uppercase}
+.dest-select{flex:1;padding:8px 28px 8px 10px;background:var(--s2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2394a3b8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.offline-warn{font-size:11px;color:var(--orange);font-family:var(--mono);background:#fff7ed;border:1px solid #fed7aa;border-radius:var(--r-sm);padding:6px 10px;display:none}
+.offline-warn.show{display:block}
+.new-actions{display:flex;gap:8px}
+.action-card{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:13px 6px;background:var(--s2);border:1.5px solid var(--border);border-radius:var(--r);cursor:pointer;transition:all .15s;box-shadow:var(--sh)}
+.action-card:active{transform:scale(.97)}
+.action-card.ac-blue{background:var(--blue-bg);border-color:var(--blue-dim)}
+.action-card.ac-scan{background:var(--s2);border-color:var(--border)}
+.action-card.ac-scan.active{background:var(--red-bg);border-color:var(--red)}
+.ac-ico{font-size:22px}
+.ac-label{font-size:10px;font-weight:600;color:var(--text2);text-align:center;line-height:1.3}
+.action-card.ac-blue .ac-label{color:var(--blue)}
+.action-card.ac-scan.active .ac-label{color:var(--red)}
+#newCamView{position:relative;background:#000;flex-shrink:0;display:none;border-bottom:1px solid var(--border)}
+#newCamView.show{display:block}
+#newVideo{width:100%;display:block;object-fit:cover;max-height:200px}
+#newCanvas{display:none}
+.vf-ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.vf-box{width:190px;height:125px;position:relative}
+.vf-c{position:absolute;width:20px;height:20px;border-color:rgba(255,255,255,.9);border-style:solid}
+.vf-c.tl{top:0;left:0;border-width:2px 0 0 2px}.vf-c.tr{top:0;right:0;border-width:2px 2px 0 0}
+.vf-c.bl{bottom:0;left:0;border-width:0 0 2px 2px}.vf-c.br{bottom:0;right:0;border-width:0 2px 2px 0}
+.vf-line{position:absolute;left:6px;right:6px;height:2px;background:linear-gradient(90deg,transparent,#60a5fa,transparent);box-shadow:0 0 8px #60a5fa;top:6px}
+.vf-line.animate{animation:scanL 1.2s ease-in-out infinite}
+@keyframes scanL{0%{top:6px}50%{top:calc(100% - 8px)}100%{top:6px}}
+.vf-flash{position:absolute;inset:0;background:#60a5fa;opacity:0;pointer-events:none;transition:opacity .06s}
+.vf-flash.on{opacity:.22}
+.vf-chip{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.95);border:1px solid var(--blue);border-radius:var(--r-sm);padding:5px 14px;font-family:var(--mono);font-size:11px;color:var(--blue);white-space:nowrap;max-width:90%;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .2s;pointer-events:none;box-shadow:var(--sh)}
+.vf-chip.show{opacity:1}
+/* Carrello */
+.cart-section{background:var(--s1);border-top:2px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;max-height:50%}
+.cart-head{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.cart-title-txt{font-size:11px;font-weight:700;color:var(--text2)}
+.cart-n{font-family:var(--mono);font-size:12px;color:var(--blue);font-weight:700}
+.cart-clear-btn{font-size:11px;color:var(--red);background:none;border:none;cursor:pointer}
+#cartItems{flex:1;overflow-y:auto;padding:6px 12px;display:flex;flex-direction:column;gap:4px;min-height:36px}
+.cart-item{display:flex;align-items:center;gap:7px;padding:6px 9px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm)}
+.ci-cod{font-family:var(--mono);font-size:10px;color:var(--blue);min-width:66px;font-weight:600}
+.ci-desc{flex:1;font-size:12px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ci-qty{display:flex;align-items:center;gap:3px}
+.ci-qbtn{width:20px;height:20px;border:1px solid var(--border);background:var(--s1);color:var(--text);border-radius:4px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center}
+.ci-qval{font-family:var(--mono);font-size:11px;min-width:18px;text-align:center}
+.ci-del{width:18px;height:18px;border:none;background:none;color:var(--dim);font-size:13px;cursor:pointer;flex-shrink:0}
+.cart-ph{padding:10px;text-align:center;font-size:12px;color:var(--dim)}
+.note-area{padding:5px 12px;flex-shrink:0}
+.note-input{width:100%;padding:7px 10px;background:var(--s2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:var(--sans);font-size:12px;outline:none;resize:none}
+.cart-footer{padding:7px 12px;flex-shrink:0}
+.btn-primary{width:100%;padding:11px;border:none;border-radius:var(--r-sm);background:var(--blue);color:#fff;font-family:var(--sans);font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 2px 4px rgba(37,99,235,.3);transition:background .15s,transform .1s}
+.btn-primary:active{background:var(--blue-d)}
+.btn-primary:disabled{background:var(--dim);box-shadow:none;cursor:default}
+
+/* ── PAGINA RICERCA ────────────────────────────────────────────── */
+#searchPage{position:fixed;inset:0;z-index:100;background:var(--bg);display:none;flex-direction:column;max-width:480px;margin:0 auto}
+#searchPage.show{display:flex}
+.sp-header{display:flex;align-items:center;gap:10px;padding:0 14px;min-height:52px;background:var(--blue);flex-shrink:0}
+.sp-back{width:34px;height:34px;border:none;background:rgba(255,255,255,.2);border-radius:8px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sp-title{font-size:14px;font-weight:700;color:#fff;flex:1}
+.sp-count{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.7)}
+.sp-search-bar{padding:10px 14px;background:var(--s1);border-bottom:1px solid var(--border);display:flex;gap:7px;flex-shrink:0}
+.sp-input{flex:1;padding:10px 12px;background:var(--s2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:var(--sans);font-size:14px;outline:none}
+.sp-input:focus{border-color:var(--blue)}
+.sp-btns{display:flex;gap:5px}
+.sp-btn{padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--s2);color:var(--text2);font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;transition:all .1s}
+.sp-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.sp-status{display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--s2);border-bottom:1px solid var(--border);font-size:11px;color:var(--text2);flex-shrink:0}
+.sp-spinner{width:13px;height:13px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .6s linear infinite;display:none;flex-shrink:0}
+.sp-spinner.show{display:block}
+#spResults{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:7px}
+.sp-result{display:flex;align-items:center;gap:12px;padding:13px 14px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh)}
+.sp-result-ico{width:38px;height:38px;border-radius:9px;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sp-result-info{flex:1;min-width:0}
+.sp-result-cod{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--blue)}
+.sp-result-desc{font-size:14px;color:var(--text);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp-add-btn{width:36px;height:36px;border:none;border-radius:9px;background:var(--blue);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 1px 3px rgba(37,99,235,.3);transition:transform .1s}
+.sp-add-btn:active{transform:scale(.9)}
+.sp-add-btn.added{background:var(--green)}
+.sp-ph{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:40px 20px;color:var(--dim);text-align:center}
+.sp-ph .pi{font-size:40px;opacity:.18}
+.sp-ph p{font-size:13px;line-height:1.7;color:var(--text2)}
+
+/* ── ORDER DETAIL PAGE ────────────────────────────────────────── */
+#orderPage{position:fixed;inset:0;z-index:150;background:var(--bg);display:none;flex-direction:column;max-width:480px;margin:0 auto}
+#orderPage.show{display:flex}
+.op-header{display:flex;align-items:center;gap:10px;padding:0 14px;min-height:52px;background:var(--blue);flex-shrink:0}
+.op-back{width:34px;height:34px;border:none;background:rgba(255,255,255,.2);border-radius:8px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.op-hinfo{flex:1}
+.op-htitle{font-size:14px;font-weight:700;color:#fff}
+.op-hid{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.65);margin-top:2px}
+#opBody{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.op-note{font-size:13px;color:var(--text2);font-style:italic;padding:9px 12px;background:var(--blue-bg);border-radius:var(--r-sm);border-left:3px solid var(--blue-dim)}
+.op-item{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:8px}
+.op-item-head{display:flex;align-items:flex-start;gap:8px}
+.op-item-cod{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--blue);min-width:90px}
+.op-item-desc{font-size:13px;color:var(--text);flex:1}
+.op-qty-row{display:flex;align-items:center;gap:8px}
+.op-qty-btn{width:34px;height:34px;border:1.5px solid var(--border);background:var(--s2);color:var(--text);border-radius:8px;cursor:pointer;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.op-qty-btn:active{background:var(--blue-bg);border-color:var(--blue)}
+.op-qty-input{width:72px;padding:7px 8px;background:var(--s2);border:1.5px solid var(--border);border-radius:8px;color:var(--blue);font-family:var(--mono);font-size:15px;font-weight:700;outline:none;text-align:center}
+.op-qty-input:focus{border-color:var(--blue)}
+.op-um-select{flex:1;padding:7px 10px;background:var(--s2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;cursor:pointer}
+.op-conversion{font-family:var(--mono);font-size:10px;color:var(--dim)}
+.op-item-nota{font-size:11px;color:var(--text2);font-style:italic;padding:5px 8px;background:var(--s2);border-radius:5px}
+.op-footer{padding:10px 14px;background:var(--s1);border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.op-btn-reinoltra{flex:1;padding:10px;border:1.5px solid var(--border);background:var(--s2);color:var(--text2);border-radius:var(--r-sm);font-size:12px;font-weight:600;cursor:pointer}
+.op-btn-ok{flex:1;padding:10px;border:none;background:var(--blue);color:#fff;border-radius:var(--r-sm);font-size:13px;font-weight:700;cursor:pointer}
+
+/* ── ITEM DETAIL PAGE ─────────────────────────────────────────── */
+#itemPage{position:fixed;inset:0;z-index:200;background:var(--bg);display:none;flex-direction:column;max-width:480px;margin:0 auto}
+#itemPage.show{display:flex}
+.ip-header{display:flex;align-items:center;gap:10px;padding:0 14px;min-height:52px;background:var(--blue);flex-shrink:0}
+.ip-back{width:34px;height:34px;border:none;background:rgba(255,255,255,.2);border-radius:8px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ip-title{font-size:14px;font-weight:700;color:#fff;flex:1;font-family:var(--mono)}
+#ipBody{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.ip-section{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.ip-section-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+.ip-desc{font-size:14px;color:var(--text2);font-style:italic}
+.qty-controls{display:flex;align-items:center;gap:10px}
+.qty-big-btn{width:46px;height:46px;border:1.5px solid var(--border);background:var(--s2);color:var(--text);border-radius:10px;cursor:pointer;font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qty-big-btn:active{background:var(--blue-bg);border-color:var(--blue)}
+.qty-big-input{flex:1;padding:10px;background:var(--s2);border:1.5px solid var(--border);border-radius:10px;color:var(--blue);font-family:var(--mono);font-size:20px;font-weight:700;outline:none;text-align:center}
+.qty-big-input:focus{border-color:var(--blue)}
+.qty-step-info{font-size:10px;color:var(--dim);font-family:var(--mono)}
+.um-select{width:100%;padding:10px 12px;background:var(--s2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:var(--sans);font-size:14px;outline:none;cursor:pointer}
+.um-select:focus{border-color:var(--blue)}
+.item-nota-input{width:100%;padding:10px;background:var(--s2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-family:var(--sans);font-size:13px;outline:none;resize:none}
+.item-nota-input:focus{border-color:var(--blue)}
+.ip-footer{padding:12px 14px;background:var(--s1);border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.ip-btn-del{flex:1;padding:11px;border:1.5px solid var(--red);background:var(--red-bg);color:var(--red);border-radius:var(--r-sm);font-size:13px;font-weight:700;cursor:pointer}
+.ip-btn-ok{flex:2;padding:11px;border:none;background:var(--blue);color:#fff;border-radius:var(--r-sm);font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 2px 4px rgba(37,99,235,.3)}
+
+/* ── TOAST ─────────────────────────────────────────────────────── */
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;border-radius:var(--r-sm);padding:9px 16px;font-family:var(--mono);font-size:11px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .2s;z-index:999;box-shadow:var(--sh-md)}
+#toast.show{opacity:1}
+#toast.ok{background:var(--green)}
+#toast.err{background:var(--red)}
+#toast.warn{background:var(--orange)}
+#toast.info{background:var(--blue)}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ── AUTH ──────────────────────────────────────────────────── -->
+  <div class="auth-screen" id="authScreen">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-logo">📦</div>
+        <div class="auth-title">ScanPC</div>
+        <div class="auth-subtitle">Gestione comande</div>
+      </div>
+      <div class="auth-body">
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tabLogin"    onclick="showAuthTab('login')">Accedi</button>
+          <button class="auth-tab"        id="tabRegister" onclick="showAuthTab('register')">Registrati</button>
+        </div>
+        <div id="authError" class="auth-error"></div>
+
+        <!-- Login -->
+        <div id="loginForm">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="field"><label>Nome utente</label><input type="text" id="loginUser" placeholder="Il tuo nome" maxlength="32" autocomplete="username"></div>
+            <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••" maxlength="64" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+            <div class="auth-spinner" id="loginSpinner"></div>
+            <button class="btn-auth" id="loginBtn" onclick="doLogin()">Accedi →</button>
+          </div>
+        </div>
+
+        <!-- Registrazione -->
+        <div id="registerForm" style="display:none">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="field"><label>Nome utente</label><input type="text" id="regUser" placeholder="Scegli un nome" maxlength="32" autocomplete="username"></div>
+            <div class="field"><label>Password</label><input type="password" id="regPass" placeholder="Min. 4 caratteri" maxlength="64" autocomplete="new-password"></div>
+            <div class="field"><label>Conferma password</label><input type="password" id="regPass2" placeholder="Ripeti password" maxlength="64" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()"></div>
+            <div class="auth-spinner" id="regSpinner"></div>
+            <button class="btn-auth" id="regBtn" onclick="doRegister()">Registrati →</button>
+          </div>
+        </div>
+      </div>
+      <div class="auth-footer">ScanPC v3</div>
+    </div>
+  </div>
+
+  <!-- ── HEADER ─────────────────────────────────────────────────── -->
+  <header style="display:none" id="appHeader">
+    <div class="brand">
+      <div class="brand-icon">📦</div>
+      <span class="brand-name">SCANPC</span>
+    </div>
+    <div class="header-right">
+      <div class="user-chip" id="userChip">👤</div>
+      <div class="pill" id="pill"><div class="pill-dot"></div><span id="pillLabel">offline</span></div>
+      <button class="logout-btn" onclick="doLogout()" title="Logout">⏻</button>
+    </div>
+  </header>
+
+  <!-- ── MAIN ───────────────────────────────────────────────────── -->
+  <div id="main">
+    <div class="status-bar">
+      <span id="pcStatusLabel">PC offline</span>
+      <span id="usersOnlineLabel"></span>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tabComBtn" onclick="switchTab('com')">
+        <span class="tab-ico">📋</span><span>Comande</span>
+        <span class="tab-badge" id="comBadge"></span>
+      </button>
+      <button class="tab-btn" id="tabNewBtn" onclick="switchTab('new')">
+        <span class="tab-ico">＋</span><span>Nuova</span>
+      </button>
+    </div>
+
+    <!-- TAB COMANDE -->
+    <div class="tab-panel active" id="tabCom">
+      <div class="list-header">
+        <span class="list-title">Comande ricevute</span>
+        <span class="list-count" id="ordersCount">0</span>
+      </div>
+      <div id="ordersList">
+        <div class="empty-state" id="emptyOrders">
+          <div class="e-ico">📭</div>
+          <p>Nessuna comanda ricevuta.<br>Le comande dal PC appariranno qui.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB NUOVA -->
+    <div class="tab-panel" id="tabNew">
+      <div class="new-top">
+        <div class="dest-row">
+          <span class="dest-label">A:</span>
+          <select class="dest-select" id="destSelect" onchange="onDestChange()">
+            <option value="PC">PC (server)</option>
+          </select>
+        </div>
+        <div class="offline-warn" id="offlineWarn">
+          ⚠ Utente offline — la comanda verrà accodata e consegnata non appena si connette
+        </div>
+        <div class="new-actions">
+          <div class="action-card ac-blue" onclick="openSearchPage('cod_art')">
+            <div class="ac-ico">🔍</div>
+            <div class="ac-label">Cerca<br>Codice</div>
+          </div>
+          <div class="action-card ac-blue" onclick="openSearchPage('descrizione')">
+            <div class="ac-ico">📝</div>
+            <div class="ac-label">Cerca<br>Descrizione</div>
+          </div>
+          <div class="action-card ac-scan" id="scanCard" onclick="toggleScanGuarded()">
+            <div class="ac-ico" id="scanIco">📷</div>
+            <div class="ac-label" id="scanLbl">Fotocamera<br>Scan</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Camera -->
+      <div id="newCamView">
+        <video id="newVideo" autoplay playsinline muted></video>
+        <canvas id="newCanvas"></canvas>
+        <div class="vf-ov"><div class="vf-box">
+          <div class="vf-c tl"></div><div class="vf-c tr"></div>
+          <div class="vf-c bl"></div><div class="vf-c br"></div>
+          <div class="vf-line" id="vfLine"></div>
+        </div></div>
+        <div class="vf-flash" id="vfFlash"></div>
+        <div class="vf-chip" id="vfChip"></div>
+      </div>
+
+      <!-- Carrello -->
+      <div class="cart-section">
+        <div class="cart-head">
+          <span class="cart-title-txt">Carrello <span class="cart-n" id="cartN">0</span></span>
+          <button class="cart-clear-btn" onclick="clearCart()">Svuota</button>
+        </div>
+        <div id="cartItems"><div class="cart-ph">Aggiungi articoli con ricerca o fotocamera</div></div>
+        <div class="note-area">
+          <textarea class="note-input" id="orderNote" rows="2" placeholder="Note (opzionale)…"></textarea>
+        </div>
+        <div class="cart-footer">
+          <button class="btn-primary" id="btnSendOrder" onclick="sendOrder()" disabled>Invia comanda</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGINA COMANDA RICEVUTA -->
+<div id="orderPage">
+  <div class="op-header">
+    <button class="op-back" onclick="closeOrderPage()">←</button>
+    <div class="op-hinfo">
+      <div class="op-htitle" id="opFrom"></div>
+      <div class="op-hid"   id="opId"></div>
+    </div>
+  </div>
+  <div id="opBody"></div>
+  <div class="op-footer">
+    <button class="op-btn-reinoltra" onclick="opReinoltra()">↩ Reinoltra al PC</button>
+    <button class="op-btn-ok"        onclick="opOk()">✓ OK — Rimuovi</button>
+  </div>
+</div>
+
+<!-- PAGINA DETTAGLIO ARTICOLO -->
+<div id="itemPage">
+  <div class="ip-header">
+    <button class="ip-back" onclick="closeItemPage()">←</button>
+    <span class="ip-title" id="ipCodArt">Articolo</span>
+  </div>
+  <div id="ipBody">
+    <div class="ip-section">
+      <div class="ip-desc" id="ipDesc"></div>
+    </div>
+    <!-- Quantità -->
+    <div class="ip-section">
+      <div class="ip-section-title">Quantità</div>
+      <div class="qty-controls">
+        <button class="qty-big-btn" onclick="ipQty(-1)">−</button>
+        <input class="qty-big-input" id="ipQtyInput" type="text" inputmode="decimal"
+          onchange="ipApplyQty()" onblur="ipApplyQty()">
+        <button class="qty-big-btn" onclick="ipQty(+1)">+</button>
+      </div>
+      <div class="qty-step-info" id="ipStepInfo">Step: 1</div>
+    </div>
+    <!-- Unità di misura -->
+    <div class="ip-section">
+      <div class="ip-section-title">Unità di misura</div>
+      <select class="um-select" id="ipUmSelect" onchange="ipUmChange()">
+        <option value="">—</option>
+      </select>
+    </div>
+    <!-- Nota articolo -->
+    <div class="ip-section">
+      <div class="ip-section-title">Nota per questo articolo</div>
+      <textarea class="item-nota-input" id="ipNota" rows="3"
+        placeholder="Aggiungi una nota specifica per questo articolo…"></textarea>
+    </div>
+  </div>
+  <div class="ip-footer">
+    <button class="ip-btn-del" onclick="ipRemove()">🗑 Rimuovi</button>
+    <button class="ip-btn-ok"  onclick="ipConfirm()">✓ Conferma</button>
+  </div>
+</div>
+
+<!-- PAGINA RICERCA FULLSCREEN -->
+<div id="searchPage">
+  <div class="sp-header">
+    <button class="sp-back" onclick="closeSearchPage()">←</button>
+    <span class="sp-title" id="spTitle">Cerca articolo</span>
+    <span class="sp-count" id="spCount"></span>
+  </div>
+  <div class="sp-search-bar">
+    <input class="sp-input" id="spInput" type="text" placeholder="Inizia a digitare…"
+      oninput="onSpInput()" onkeydown="if(event.key==='Enter')spSearch(spMode)">
+    <div class="sp-btns">
+      <button class="sp-btn active" id="spBtnCod"  onclick="spSearch('cod_art')">COD</button>
+      <button class="sp-btn"        id="spBtnDesc" onclick="spSearch('descrizione')">DESC</button>
+    </div>
+  </div>
+  <div class="sp-status">
+    <div class="sp-spinner" id="spSpinner"></div>
+    <span id="spStatusTxt">Digita per cercare nel database</span>
+  </div>
+  <div id="spResults">
+    <div class="sp-ph"><div class="pi">🔍</div><p>Cerca per codice o descrizione.<br>I risultati appariranno qui.</p></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.4/dist/quagga.min.js"></script>
+<script>
+'use strict';
+
+// ════════════════════════════════════════════════════════════
+// STATO
+// ════════════════════════════════════════════════════════════
+let token=null, myName='';
+let ws=null, pcOnline=false;
+let onlineUsers=[], registeredUsers=[];
+const ordersMap=new Map();
+let unreadOrders=0, curTab='com';
+let cart=[];
+
+// scan
+let scanActive=false,scanStream=null,scanRafId=null,scanQTimer=null,scanQBusy=false;
+const DEBOUNCE=1300;
+let _dbVal='',_dbTime=0;
+
+// search page
+let spMode='cod_art', spTimer=null, pendingScan=false;
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function uid(){return 'ORD-'+Math.random().toString(36).slice(2,7).toUpperCase()+'-'+Date.now().toString(36).toUpperCase()}
+function rid(){return Math.random().toString(36).slice(2,14)+Date.now().toString(36)}
+
+let _toastTm;
+function toast(msg,type=''){const t=$('toast');t.textContent=msg;t.className='show '+(type||'');clearTimeout(_toastTm);_toastTm=setTimeout(()=>t.className='',3200)}
+
+// ════════════════════════════════════════════════════════════
+// AUTH — schermata login/registrazione
+// ════════════════════════════════════════════════════════════
+function showAuthTab(tab){
+  $('tabLogin').classList.toggle('active',tab==='login');
+  $('tabRegister').classList.toggle('active',tab==='register');
+  $('loginForm').style.display=tab==='login'?'':'none';
+  $('registerForm').style.display=tab==='register'?'':'none';
+  hideAuthError();
+}
+function showAuthError(msg){const e=$('authError');e.textContent=msg;e.classList.add('show')}
+function hideAuthError(){$('authError').classList.remove('show')}
+
+async function doLogin(){
+  const user=$('loginUser').value.trim();
+  const pass=$('loginPass').value;
+  if(!user||!pass){showAuthError('Inserisci nome e password');return}
+  $('loginBtn').disabled=true;$('loginSpinner').classList.add('show');hideAuthError();
+  try{
+    const r=await fetch('/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userName:user,password:pass})});
+    const d=await r.json();
+    if(!r.ok){showAuthError(d.error||'Errore login');return}
+    saveAndStart(d.token,d.userName);
+  }catch(e){showAuthError('Errore di rete')}
+  finally{$('loginBtn').disabled=false;$('loginSpinner').classList.remove('show')}
+}
+
+async function doRegister(){
+  const user=$('regUser').value.trim();
+  const pass=$('regPass').value;
+  const pass2=$('regPass2').value;
+  if(!user||!pass){showAuthError('Compila tutti i campi');return}
+  if(pass!==pass2){showAuthError('Le password non coincidono');return}
+  if(pass.length<4){showAuthError('Password minimo 4 caratteri');return}
+  $('regBtn').disabled=true;$('regSpinner').classList.add('show');hideAuthError();
+  try{
+    const r=await fetch('/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userName:user,password:pass})});
+    const d=await r.json();
+    if(!r.ok){showAuthError(d.error||'Errore registrazione');return}
+    saveAndStart(d.token,d.userName);
+  }catch(e){showAuthError('Errore di rete')}
+  finally{$('regBtn').disabled=false;$('regSpinner').classList.remove('show')}
+}
+
+function saveAndStart(tok,name){
+  token=tok; myName=name;
+  localStorage.setItem('scanpc_token',tok);
+  localStorage.setItem('scanpc_user',name);
+  showApp();
+}
+
+function doLogout(){
+  localStorage.removeItem('scanpc_token');
+  localStorage.removeItem('scanpc_user');
+  token=null; myName='';
+  if(ws){ws.close();ws=null}
+  stopScan();
+  $('main').classList.remove('show');
+  $('appHeader').style.display='none';
+  $('authScreen').style.display='flex';
+  $('loginUser').value='';$('loginPass').value='';
+  showAuthTab('login');
+}
+
+function showApp(){
+  $('authScreen').style.display='none';
+  $('appHeader').style.display='flex';
+  $('main').classList.add('show');
+  $('userChip').textContent='👤 '+myName;
+  connectWS();
+  initPush();
+}
+
+// Auto-login al caricamento
+async function tryAutoLogin(){
+  const tok=localStorage.getItem('scanpc_token');
+  const name=localStorage.getItem('scanpc_user');
+  if(!tok||!name)return;
+  try{
+    const r=await fetch('/auth/verify',{headers:{'Authorization':'Bearer '+tok}});
+    if(r.ok){token=tok;myName=name;showApp();}
+    else{localStorage.removeItem('scanpc_token');localStorage.removeItem('scanpc_user')}
+  }catch(_){}
+}
+
+// ════════════════════════════════════════════════════════════
+// PUSH
+// ════════════════════════════════════════════════════════════
+async function initPush(){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window))return;
+  try{
+    const reg=await navigator.serviceWorker.register('/sw.js');
+    const res=await fetch('/vapid-public-key');
+    const {key}=await res.json();
+    if(!key)return;
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted')return;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64(key)});
+    // Invia via REST con auth
+    await fetch('/push-subscribe',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({subscription:sub})});
+    // Anche via WS
+    if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'push_subscribe',subscription:sub}));
+  }catch(e){console.warn('[PUSH]',e.message)}
+}
+function urlB64(b){const p='='.repeat((4-b.length%4)%4);const r=atob((b+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...r].map(c=>c.charCodeAt(0)))}
+
+// ════════════════════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════════════════════
+function switchTab(tab){
+  if(scanActive&&tab!=='new')stopScan();
+  curTab=tab;
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  const key=tab.charAt(0).toUpperCase()+tab.slice(1);
+  $(('tab'+key)).classList.add('active');
+  $(('tab'+key+'Btn')).classList.add('active');
+  if(tab==='com'){unreadOrders=0;updateBadge()}
+}
+
+// ════════════════════════════════════════════════════════════
+// WEBSOCKET — usa token JWT nell'URL
+// ════════════════════════════════════════════════════════════
+function connectWS(){
+  if(!token)return;
+  try{
+    const p=location.protocol==='https:'?'wss:':'ws:';
+    ws=new WebSocket(`${p}//${location.host}?type=web&token=${encodeURIComponent(token)}`);
+    ws.onopen=()=>{$('pill').classList.add('on');$('pillLabel').textContent='connesso'};
+    ws.onmessage=e=>{try{handleMsg(JSON.parse(e.data))}catch(_){}};
+    ws.onclose=(ev)=>{
+      $('pill').classList.remove('on');$('pillLabel').textContent='offline';
+      // Se 4001/4002 → token scaduto, forza logout
+      if(ev.code===4001||ev.code===4002){toast('Sessione scaduta, effettua di nuovo il login','err');doLogout();return}
+      setTimeout(connectWS,4000);
+    };
+    ws.onerror=()=>{$('pill').classList.remove('on');$('pillLabel').textContent='offline'};
+  }catch(_){setTimeout(connectWS,4000)}
+}
+
+function handleMsg(msg){
+  switch(msg.type){
+    case 'user_list':
+      pcOnline=!!msg.pcConnected;
+      onlineUsers=msg.online||[];
+      registeredUsers=msg.registered||[];
+      updateStatusBar();updateDestSelect();updateScanCardState();break;
+    case 'search_response': onSearchResponse(msg);break;
+    case 'new_order':       onOrderReceived(msg.order);break;
+    case 'order_confirm':   toast('✅ Confermata dal PC','ok');break;
+    case 'order_queued':    toast(`📬 Comanda accodata per ${msg.destination}`,'info');break;
+    case 'order_modified_notify': toast(`✏ Modificata da ${msg.modified_by}`,'warn');break;
+    case 'error':           toast('⚠ '+msg.message,'err');break;
+  }
+}
+
+function updateStatusBar(){
+  $('pcStatusLabel').textContent=pcOnline?'● PC connesso':'● PC offline';
+  $('pcStatusLabel').style.color=pcOnline?'var(--green)':'var(--dim)';
+  const others=onlineUsers.filter(u=>u!==myName);
+  $('usersOnlineLabel').textContent=others.length?'👥 '+others.join(', '):'';
+}
+
+// ════════════════════════════════════════════════════════════
+// DESTINATARI — mostra TUTTI i registrati (online + offline)
+// ════════════════════════════════════════════════════════════
+function updateDestSelect(){
+  const sel=$('destSelect'),cur=sel.value;
+  sel.innerHTML='<option value="PC">PC (server)</option>';
+  // Mostra tutti i registrati tranne se stesso
+  const all=[...new Set([...registeredUsers,...onlineUsers])].filter(u=>u!==myName);
+  all.forEach(u=>{
+    const opt=document.createElement('option');
+    opt.value=u;
+    const isOnline=onlineUsers.includes(u);
+    opt.textContent=isOnline?`${u}  ●`:`${u}  ○`;
+    if(!isOnline)opt.style.color='var(--dim)';
+    sel.appendChild(opt);
+  });
+  if([...sel.options].some(o=>o.value===cur))sel.value=cur;
+  onDestChange();
+}
+function onDestChange(){
+  const v=$('destSelect').value;
+  const offline=v!=='PC'&&!onlineUsers.includes(v);
+  $('offlineWarn').classList.toggle('show',offline);
+}
+
+// ════════════════════════════════════════════════════════════
+// COMANDE RICEVUTE
+// ════════════════════════════════════════════════════════════
+function onOrderReceived(order){
+  ordersMap.set(order.order_id,order);
+  if(curTab!=='com'){unreadOrders++;updateBadge()}
+  renderOrders();
+  toast(`📦 Nuova comanda da ${order.created_by}`,'info');
+}
+function updateBadge(){
+  const b=$('comBadge');
+  b.textContent=unreadOrders||'';b.classList.toggle('show',unreadOrders>0);
+  $('ordersCount').textContent=ordersMap.size;
+}
+function renderOrders(){
+  const c=$('ordersList');
+  [...c.children].forEach(el=>{if(el.id!=='emptyOrders')el.remove()});
+  $('emptyOrders').style.display=ordersMap.size?'none':'flex';
+  $('ordersCount').textContent=ordersMap.size;
+  [...ordersMap.values()].sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp))
+    .forEach(o=>c.appendChild(buildOrderCard(o)));
+}
+function buildOrderCard(order){
+  const card=document.createElement('div');
+  card.className='order-card'+(order.status==='pending'?' isnew':'');
+  const ts=new Date(order.timestamp).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  const stM={pending:'in attesa',modified:'modificata',confirmed:'confermata'};
+  // Anteprima: max 3 articoli
+  const previewItems=(order.items||[]).slice(0,3).map(it=>{
+    const um=it.unitaMisura?` ${it.unitaMisura}`:'';
+    return `<div style="display:flex;gap:8px;align-items:center;padding:3px 0">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--blue);font-weight:700;min-width:80px">${esc(it.cod_art)}</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--text2)">x${fmtQty(it.qty||1)}${um}</span>
+      <span style="font-size:11px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(it.descrizione)}</span>
+    </div>`;
+  }).join('');
+  const moreItems=(order.items||[]).length>3?`<div style="font-size:11px;color:var(--dim);font-style:italic">... e altri ${order.items.length-3} articoli</div>`:'';
+  card.innerHTML=`
+    <div class="oc-head" style="cursor:pointer" onclick="openOrderPage('${order.order_id}')">
+      <div><div class="oc-from">📦 Da: ${esc(order.created_by)}</div><div class="oc-id">${order.order_id} • ${ts}</div></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="oc-status ${order.status}">${stM[order.status]||order.status}</div>
+        <span style="font-size:12px;color:var(--dim)">→</span>
+      </div>
+    </div>
+    <div style="padding:10px 14px;display:flex;flex-direction:column;gap:4px">
+      ${previewItems}${moreItems}
+      ${order.note?`<div class="oc-note" style="margin-top:4px">📝 ${esc(order.note)}</div>`:''}
+    </div>`;
+  return card;
+}
+
+// ── Pagina comanda ricevuta ────────────────────────────────
+let currentOrderId = null;
+function openOrderPage(oid){
+  const o=ordersMap.get(oid);if(!o)return;
+  currentOrderId=oid;
+  $('opFrom').textContent='Da: '+o.created_by;
+  $('opId').textContent=o.order_id+' • '+new Date(o.timestamp).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  const body=$('opBody');body.innerHTML='';
+  if(o.note&&o.note.trim()){const n=document.createElement('div');n.className='op-note';n.textContent='📝 '+o.note;body.appendChild(n);}
+  (o.items||[]).forEach((it,idx)=>body.appendChild(buildOpItem(o,it,idx)));
+  $('orderPage').classList.add('show');
+}
+function closeOrderPage(){$('orderPage').classList.remove('show');currentOrderId=null}
+
+function buildOpItem(order,it,idx){
+  const box=document.createElement('div');box.className='op-item';
+
+  // Testa cod + descrizione
+  const head=document.createElement('div');head.className='op-item-head';
+  const cod=document.createElement('div');cod.className='op-item-cod';cod.textContent=it.cod_art;
+  const desc=document.createElement('div');desc.className='op-item-desc';desc.textContent=it.descrizione;
+  head.appendChild(cod);head.appendChild(desc);
+
+  // Qty + UM
+  const qtyRow=document.createElement('div');qtyRow.className='op-qty-row';
+
+  const btnM=document.createElement('button');btnM.className='op-qty-btn';btnM.textContent='−';
+  const inp=document.createElement('input');inp.className='op-qty-input';inp.type='text';inp.inputMode='decimal';
+  inp.value=fmtQty(it.qty||1);
+  const btnP=document.createElement('button');btnP.className='op-qty-btn';btnP.textContent='+';
+
+  // UM select
+  const umSel=document.createElement('select');umSel.className='op-um-select';
+  const umList=it.umList||it.unita_misura_list||[];
+  if(umList.length){
+    umList.forEach(um=>{const opt=document.createElement('option');opt.value=um;opt.textContent=um;if(um===it.unitaMisura)opt.selected=true;umSel.appendChild(opt);});
+  } else {
+    const opt=document.createElement('option');opt.value=it.unitaMisura||'';opt.textContent=it.unitaMisura||'—';umSel.appendChild(opt);
+  }
+
+  // Label conversione
+  const convLabel=document.createElement('div');convLabel.className='op-conversion';
+  const updateConv=()=>{
+    const f=getfattore(it,umSel.value);
+    if(f===1)convLabel.textContent='UM base';
+    else{
+      const qta=parseOpQty(inp.value);
+      convLabel.textContent=`${fmtQty(qta)} × ${f} = ${fmtQty(round(qta*f))} ${it.umBase||''}`;
+    }
+  };
+
+  // Step e logica +/-
+  const getStep=()=>{const v=parseOpQty(inp.value);return v>0?v:(it.step||1)};
+  const applyInp=()=>{
+    const v=parseOpQty(inp.value);
+    if(v>=0){it.qty=v;if(v>0)it.step=v;inp.value=fmtQty(v);updateConv();}
+    else inp.value=fmtQty(it.qty||1);
+  };
+  btnM.addEventListener('click',()=>{it.qty=round(Math.max(0,(it.qty||1)-(it.step||1)));inp.value=fmtQty(it.qty);updateConv();});
+  btnP.addEventListener('click',()=>{it.qty=round((it.qty||1)+(it.step||1));inp.value=fmtQty(it.qty);updateConv();});
+  inp.addEventListener('change',applyInp);inp.addEventListener('blur',applyInp);
+  umSel.addEventListener('change',()=>{it.unitaMisura=umSel.value;updateConv();});
+
+  qtyRow.appendChild(btnM);qtyRow.appendChild(inp);qtyRow.appendChild(btnP);qtyRow.appendChild(umSel);
+  updateConv();
+
+  box.appendChild(head);box.appendChild(qtyRow);box.appendChild(convLabel);
+  if(it.nota&&it.nota.trim()){const n=document.createElement('div');n.className='op-item-nota';n.textContent='📝 '+it.nota;box.appendChild(n);}
+  return box;
+}
+
+function getfattore(it,um){
+  const fatMap=it.fattoriConversione||it.fattori_conversione||{};
+  const base=it.umBase||it.cod_un_mis_base||'';
+  if(!um||um===base||um==='—')return 1;
+  return fatMap[um]||1;
+}
+function parseOpQty(s){const v=parseFloat(String(s).replace(',','.'));return isNaN(v)?0:Math.round(v*1e10)/1e10;}
+
+function opReinoltra(){
+  const o=ordersMap.get(currentOrderId);if(!o)return;
+  if(!ws||ws.readyState!==1){toast('⚠ Non connesso','warn');return;}
+  o.status='modified';o.modified_by=myName;
+  ws.send(JSON.stringify({type:'order_update',order:o}));
+  toast('↩ Reinoltrata al PC','ok');closeOrderPage();
+}
+function opOk(){
+  if(!currentOrderId)return;
+  ordersMap.delete(currentOrderId);renderOrders();
+  toast('✓ Rimossa','ok');closeOrderPage();
+}
+
+// ════════════════════════════════════════════════════════════
+// PAGINA RICERCA FULLSCREEN
+// ════════════════════════════════════════════════════════════
+function openSearchPage(mode){
+  if(!ws||ws.readyState!==1){toast('⚠ Non connesso al server','warn');return}
+  if(!pcOnline){toast('⚠ PC non connesso — ricerca non disponibile','warn');return}
+  spMode=mode;
+  $('spTitle').textContent=mode==='cod_art'?'Cerca per Codice Articolo':'Cerca per Descrizione';
+  $('spBtnCod').className='sp-btn'+(mode==='cod_art'?' active':'');
+  $('spBtnDesc').className='sp-btn'+(mode==='descrizione'?' active':'');
+  $('spInput').value='';$('spInput').placeholder=mode==='cod_art'?'Codice articolo…':'Parola nella descrizione…';
+  $('spCount').textContent='';$('spStatusTxt').textContent='Digita per cercare nel database';
+  $('spSpinner').classList.remove('show');
+  $('spResults').innerHTML='<div class="sp-ph"><div class="pi">🔍</div><p>Cerca per '+(mode==='cod_art'?'codice articolo':'descrizione')+'.</p></div>';
+  $('searchPage').classList.add('show');
+  setTimeout(()=>$('spInput').focus(),200);
+}
+function closeSearchPage(){$('searchPage').classList.remove('show');clearTimeout(spTimer)}
+function onSpInput(){clearTimeout(spTimer);const q=$('spInput').value.trim();if(q.length>0)spTimer=setTimeout(()=>spSearch(spMode),420)}
+function spSearch(type){
+  spMode=type;
+  $('spBtnCod').className='sp-btn'+(type==='cod_art'?' active':'');
+  $('spBtnDesc').className='sp-btn'+(type==='descrizione'?' active':'');
+  const q=$('spInput').value.trim();if(!q)return;
+  if(!pcOnline){toast('⚠ PC non connesso','warn');return}
+  $('spSpinner').classList.add('show');$('spStatusTxt').textContent=`Ricerca "${q}"…`;$('spResults').innerHTML='';
+  ws.send(JSON.stringify({type:'search_request',request_id:rid(),search_type:type,query:q,source:'manual'}));
+}
+function onSearchResponse(msg){
+  const results=msg.results||[];
+  if(pendingScan){
+    pendingScan=false;
+    $('spSpinner').classList.remove('show');
+    if(msg.error&&msg.error!==''){toast('⚠ '+msg.error,'err');return}
+    if(!results.length){toast('Nessun articolo trovato per questo codice','warn');return}
+    if(results.length===1){addToCart(results[0].cod_art,results[0].descrizione,results[0].unita_misura_list||[]);toast(`✓ ${results[0].cod_art} aggiunto`,'ok');return}
+    // Più risultati → apri pagina
+    spMode='cod_art';$('spTitle').textContent='Risultati scansione';$('spInput').value=msg.query||'';
+    $('spCount').textContent=results.length+' risultati';$('spStatusTxt').textContent=results.length+' risultati';
+    $('spSpinner').classList.remove('show');$('spResults').innerHTML='';
+    results.forEach(a=>$('spResults').appendChild(buildSpResult(a)));
+    $('searchPage').classList.add('show');
+    return;
+  }
+  if($('searchPage').classList.contains('show')){
+    $('spSpinner').classList.remove('show');
+    $('spCount').textContent=results.length+' risultati';
+    if(msg.error&&msg.error!==''){$('spStatusTxt').textContent='⚠ '+msg.error;return}
+    $('spStatusTxt').textContent=results.length+' risultato/i per "'+(msg.query||'')+'"';
+    $('spResults').innerHTML='';
+    if(!results.length){$('spResults').innerHTML='<div class="sp-ph"><div class="pi" style="font-size:28px">🤷</div><p>Nessun risultato.</p></div>';return}
+    results.forEach(a=>$('spResults').appendChild(buildSpResult(a)));
+  }
+}
+function buildSpResult(a){
+  // Usa createElement + addEventListener per avere accesso diretto all'oggetto 'a'
+  // con la sua lista UM — innerHTML non funziona per valori runtime come array
+  const d = document.createElement('div');
+  d.className = 'sp-result';
+
+  const ico = document.createElement('div');
+  ico.className = 'sp-result-ico';
+  ico.textContent = '📦';
+
+  const info = document.createElement('div');
+  info.className = 'sp-result-info';
+  const cod  = document.createElement('div'); cod.className  = 'sp-result-cod';  cod.textContent  = a.cod_art;
+  const desc = document.createElement('div'); desc.className = 'sp-result-desc'; desc.textContent = a.descrizione;
+  info.appendChild(cod); info.appendChild(desc);
+
+  const btn = document.createElement('button');
+  btn.className = 'sp-add-btn';
+  btn.id = 'spbtn-' + a.cod_art;
+  btn.textContent = '+';
+  btn.addEventListener('click', () => {
+    // 'a' è disponibile nella closure — include unita_misura_list correttamente
+    addToCart(a.cod_art, a.descrizione, a.unita_misura_list || []);
+    btn.textContent = '✓'; btn.classList.add('added');
+    setTimeout(() => { btn.textContent = '+'; btn.classList.remove('added'); }, 1400);
+    toast(`✓ ${a.cod_art} aggiunto al carrello`, 'ok');
+  });
+
+  d.appendChild(ico); d.appendChild(info); d.appendChild(btn);
+  return d;
+}
+
+// ════════════════════════════════════════════════════════════
+// SCAN FOTOCAMERA
+// ════════════════════════════════════════════════════════════
+async function toggleScan(){if(scanActive)stopScan();else await startScan()}
+async function startScan(){
+  try{
+    scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});
+    const vid=$('newVideo');vid.srcObject=scanStream;await vid.play();
+    $('newCamView').style.height=Math.round(window.innerHeight*.28)+'px';
+    $('newCamView').classList.add('show');$('vfLine').classList.add('animate');
+    scanActive=true;$('scanCard').classList.add('active');
+    $('scanIco').textContent='⏹';$('scanLbl').textContent='Stop\nFotocamera';
+    startJsQR();startQuagga();
+  }catch(e){toast('⚠ Fotocamera: '+e.message,'err')}
+}
+function stopScan(){
+  scanActive=false;
+  if(scanRafId){cancelAnimationFrame(scanRafId);scanRafId=null}
+  if(scanQTimer){clearInterval(scanQTimer);scanQTimer=null}
+  scanQBusy=false;
+  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null}
+  $('newVideo').srcObject=null;
+  $('newCamView').classList.remove('show');$('vfLine').classList.remove('animate');
+  $('scanCard').classList.remove('active');$('scanIco').textContent='📷';$('scanLbl').textContent='Fotocamera\nScan';
+}
+function onScanDetected(value,type){
+  if(!value||typeof value!=='string')return;
+  doFlash();doVib();doChip('✓ '+value);stopScan();
+  if(!ws||ws.readyState!==1){toast('⚠ Non connesso','warn');return}
+  if(!pcOnline){toast('⚠ PC offline — impossibile cercare','warn');return}
+  const st=type==='QR'?'cod_art':(type.startsWith('EAN')||type.startsWith('UPC')?'barcode':'cod_art');
+  pendingScan=true;
+  toast(`🔍 Ricerca "${value}"…`,'info');
+  ws.send(JSON.stringify({type:'search_request',request_id:rid(),search_type:st,query:value,source:type.toLowerCase()}));
+}
+function startJsQR(){
+  const vid=$('newVideo'),cv=$('newCanvas');
+  const ctx=cv.getContext('2d',{willReadFrequently:true});
+  function tick(){
+    if(!scanActive)return;
+    if(vid.readyState===vid.HAVE_ENOUGH_DATA){
+      cv.width=vid.videoWidth;cv.height=vid.videoHeight;ctx.drawImage(vid,0,0,cv.width,cv.height);
+      let id=ctx.getImageData(0,0,cv.width,cv.height);
+      let qr=jsQR(id.data,id.width,id.height,{inversionAttempts:'dontInvert'});
+      if(qr&&qr.data&&db(qr.data)){onScanDetected(qr.data,'QR');return}
+      const r=rot(cv,90);id=r.getContext('2d').getImageData(0,0,r.width,r.height);
+      qr=jsQR(id.data,id.width,id.height,{inversionAttempts:'dontInvert'});
+      if(qr&&qr.data&&db(qr.data)){onScanDetected(qr.data,'QR');return}
+    }
+    scanRafId=requestAnimationFrame(tick);
+  }
+  scanRafId=requestAnimationFrame(tick);
+}
+function startQuagga(){
+  const R=['ean_reader','ean_8_reader','upc_reader','upc_e_reader','code_128_reader','code_39_reader','code_93_reader','codabar_reader','i2of5_reader'];
+  const td=(src,cb)=>Quagga.decodeSingle({src,numOfWorkers:0,inputStream:{size:800},locator:{patchSize:'medium',halfSample:true},decoder:{readers:R},locate:true},cb);
+  scanQTimer=setInterval(()=>{
+    if(!scanActive||scanQBusy)return;
+    const cv=$('newCanvas');if(!cv.width)return;
+    scanQBusy=true;
+    td(cv.toDataURL('image/jpeg',.85),r1=>{
+      if(r1?.codeResult?.code&&db(r1.codeResult.code)){scanQBusy=false;onScanDetected(r1.codeResult.code,fmt(r1.codeResult.format));return}
+      if(!scanActive){scanQBusy=false;return}
+      td(rot($('newCanvas'),90).toDataURL('image/jpeg',.85),r2=>{
+        scanQBusy=false;if(r2?.codeResult?.code&&db(r2.codeResult.code))onScanDetected(r2.codeResult.code,fmt(r2.codeResult.format));
+      });
+    });
+  },400);
+}
+function db(v){const n=Date.now();if(v===_dbVal&&n-_dbTime<DEBOUNCE)return false;_dbVal=v;_dbTime=n;return true}
+function rot(src,deg){const w=src.width,h=src.height,c=document.createElement('canvas');if(deg===90||deg===270){c.width=h;c.height=w}else{c.width=w;c.height=h}const ctx=c.getContext('2d');ctx.translate(c.width/2,c.height/2);ctx.rotate(deg*Math.PI/180);ctx.drawImage(src,-w/2,-h/2);return c}
+function fmt(f){if(!f)return'BARCODE';const m={ean_13:'EAN13',ean_8:'EAN8',upc_a:'UPC-A',upc_e:'UPC-E',code_128:'CODE128',code_39:'CODE39',code_93:'CODE93',codabar:'CODABAR',i2of5:'ITF'};return m[f.toLowerCase()]||f.toUpperCase().slice(0,8)}
+function doFlash(){const f=$('vfFlash');f.classList.add('on');setTimeout(()=>f.classList.remove('on'),130)}
+function doVib(){if(navigator.vibrate)navigator.vibrate(80)}
+function doChip(t){const c=$('vfChip');c.textContent=t;c.classList.add('show');clearTimeout(c._t);c._t=setTimeout(()=>c.classList.remove('show'),2500)}
+
+// ════════════════════════════════════════════════════════════
+// CARRELLO
+// ════════════════════════════════════════════════════════════
+function addToCart(cod,desc,umList){
+  const ex=cart.find(c=>c.cod_art===cod);
+  if(ex){ex.qty=round(ex.qty+ex.step);renderCart();return}
+  const um=(umList&&umList.length)?umList[0]:'';
+  cart.push({cod_art:cod,descrizione:desc,qty:1,step:1,unitaMisura:um,nota:'',umList:umList||[]});
+  renderCart();
+}
+function round(v){return Math.round(v*1e10)/1e10}
+function fmtQty(v){
+  if(v===Math.floor(v)&&isFinite(v))return String(Math.round(v));
+  return String(v).replace('.',',');
+}
+function renderCart(){
+  const c=$('cartItems');c.innerHTML='';$('cartN').textContent=cart.length;$('btnSendOrder').disabled=!cart.length;
+  if(!cart.length){c.innerHTML='<div class="cart-ph">Aggiungi articoli con ricerca o fotocamera</div>';return}
+  cart.forEach((it,i)=>{
+    const qtyStr=fmtQty(it.qty)+(it.unitaMisura?' '+it.unitaMisura:'');
+    const sub=(it.nota?'📝 '+esc(it.nota):'');
+    const d=document.createElement('div');d.className='cart-item';
+    d.style.flexDirection='column';d.style.alignItems='stretch';d.style.gap='3px';
+    d.innerHTML=`<div style="display:flex;align-items:center;gap:7px">
+        <div class="ci-cod" style="cursor:pointer;text-decoration:underline" onclick="openItemPage(${i})">${esc(it.cod_art)}</div>
+        <div class="ci-desc">${esc(it.descrizione)}</div>
+        <div class="ci-qty">
+          <button class="ci-qbtn" onclick="cQ(${i},-1)">−</button>
+          <div class="ci-qval" id="cqv${i}">${qtyStr}</div>
+          <button class="ci-qbtn" onclick="cQ(${i},+1)">+</button>
+        </div>
+        <button class="ci-del" onclick="cDel(${i})">×</button>
+      </div>
+      ${sub?`<div style="font-size:10px;color:var(--dim);font-family:var(--mono);padding-left:4px">${sub}</div>`:''}`;
+    c.appendChild(d);
+  });
+}
+function cQ(i,d){
+  cart[i].qty=round(Math.max(0,cart[i].qty+d*cart[i].step));
+  const el=$('cqv'+i);if(el)el.textContent=fmtQty(cart[i].qty)+(cart[i].unitaMisura?' '+cart[i].unitaMisura:'');
+}
+function cDel(i){cart.splice(i,1);renderCart()}
+function clearCart(){cart=[];renderCart()}
+
+function sendOrder(){
+  if(!cart.length||!ws||ws.readyState!==1){if(!ws||ws.readyState!==1)toast('⚠ Non connesso','warn');return}
+  const destRaw=$('destSelect').value;
+  const dest=destRaw.replace(/\s+[●○]$/,'').trim();
+  const order={order_id:uid(),created_by:myName,destination:dest,status:'pending',
+    items:cart.map(c=>({cod_art:c.cod_art,descrizione:c.descrizione,qty:c.qty,unitaMisura:c.unitaMisura||'',nota:c.nota||''})),
+    note:$('orderNote').value.trim(),timestamp:new Date().toISOString()};
+  ws.send(JSON.stringify({type:'new_order',order}));
+  const offline=destRaw.endsWith(' ○');
+  toast(offline?`📬 Comanda accodata per ${dest}`:`📤 Inviata a ${dest}`,offline?'info':'ok');
+  clearCart();$('orderNote').value='';
+}
+
+// ════════════════════════════════════════════════════════════
+// PAGINA DETTAGLIO ARTICOLO
+// ════════════════════════════════════════════════════════════
+let ipIdx = -1; // indice articolo corrente nel carrello
+
+function openItemPage(i) {
+  ipIdx = i;
+  const it = cart[i];
+  $('ipCodArt').textContent = it.cod_art;
+  $('ipDesc').textContent   = it.descrizione;
+  $('ipQtyInput').value     = fmtQty(it.qty);
+  $('ipStepInfo').textContent = 'Step: ' + fmtQty(it.step);
+  $('ipNota').value         = it.nota || '';
+  // Popola unità di misura
+  const sel = $('ipUmSelect');
+  sel.innerHTML = '<option value="">—</option>';
+  (it.umList||[]).forEach(um => {
+    const opt = document.createElement('option');
+    opt.value = um; opt.textContent = um;
+    if (um === it.unitaMisura) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  if (it.unitaMisura && !(it.umList||[]).includes(it.unitaMisura)) {
+    const opt = document.createElement('option');
+    opt.value = it.unitaMisura; opt.textContent = it.unitaMisura; opt.selected = true;
+    sel.appendChild(opt);
+  }
+  $('itemPage').classList.add('show');
+}
+function closeItemPage() { $('itemPage').classList.remove('show'); ipIdx=-1; }
+
+function ipQty(dir) {
+  if (ipIdx < 0) return;
+  const it = cart[ipIdx];
+  it.qty = round(Math.max(0, it.qty + dir * it.step));
+  $('ipQtyInput').value = fmtQty(it.qty);
+  renderCart();
+}
+
+function ipApplyQty() {
+  if (ipIdx < 0) return;
+  const it = cart[ipIdx];
+  const raw = $('ipQtyInput').value.trim().replace(',','.');
+  const v = parseFloat(raw);
+  if (!isNaN(v) && v >= 0) {
+    const rounded = round(v);
+    it.qty = rounded;
+    // Il valore digitato diventa il nuovo step
+    if (rounded > 0) { it.step = rounded; $('ipStepInfo').textContent = 'Step: ' + fmtQty(rounded); }
+    $('ipQtyInput').value = fmtQty(rounded);
+    renderCart();
+  } else {
+    $('ipQtyInput').value = fmtQty(it.qty);
+  }
+}
+
+function ipUmChange() {
+  if (ipIdx < 0) return;
+  cart[ipIdx].unitaMisura = $('ipUmSelect').value;
+  renderCart();
+}
+
+function ipConfirm() {
+  if (ipIdx < 0) return;
+  ipApplyQty();
+  cart[ipIdx].nota = $('ipNota').value.trim();
+  cart[ipIdx].unitaMisura = $('ipUmSelect').value;
+  renderCart();
+  closeItemPage();
+}
+
+function ipRemove() {
+  if (ipIdx < 0) return;
+  cart.splice(ipIdx, 1);
+  renderCart();
+  closeItemPage();
+}
+
+// ════════════════════════════════════════════════════════════
+// GUARD FOTOCAMERA — solo se PC connesso
+// ════════════════════════════════════════════════════════════
+function toggleScanGuarded() {
+  if (!scanActive && !pcOnline) {
+    toast('⚠ La fotocamera è disponibile solo quando il PC è connesso', 'warn');
+    return;
+  }
+  toggleScan();
+}
+
+// Aggiorna stato pulsante scan quando cambia connessione PC
+function updateScanCardState() {
+  const card = $('scanCard');
+  if (!card) return;
+  if (!pcOnline && !scanActive) {
+    card.style.opacity = '0.45';
+    card.title = 'Disponibile solo con PC connesso';
+  } else {
+    card.style.opacity = '';
+    card.title = '';
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+tryAutoLogin();
+</script>
+</body>
+</html>
