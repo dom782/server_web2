@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ScanPC">
+<meta name="theme-color" content="#2563eb">
+<link rel="manifest" href="/manifest.json">
+<link rel="preload" href="/css/app.css" as="style">
+<link rel="stylesheet" href="/css/app.css">
+<title>ScanPC</title>
+<style>
+  /* Nasconde il contenuto finché app.css non è caricato — evita il flash HTML grezzo */
+  html { visibility: hidden; }
+</style>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    document.documentElement.style.visibility = 'visible';
+  });
+</script>
+<style>
+/* Hamburger */
+.hamburger-btn{width:34px;height:34px;border:none;background:rgba(255,255,255,.2);border-radius:7px;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hamburger-btn:active{background:rgba(255,255,255,.3)}
+#hamburgerMenu{position:fixed;top:0;left:0;width:240px;height:100%;background:var(--s1);z-index:500;box-shadow:4px 0 20px rgba(0,0,0,.15);display:none;flex-direction:column;transform:translateX(-100%);transition:transform .25s}
+#hamburgerMenu.show{display:flex;transform:translateX(0)}
+.hm-header{background:var(--blue);padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.hm-title{color:#fff;font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:1px}
+.hm-close{width:28px;height:28px;border:none;background:rgba(255,255,255,.2);border-radius:6px;color:#fff;font-size:16px;cursor:pointer}
+.hm-items{padding:8px 0}
+.hm-item{display:flex;align-items:center;gap:12px;padding:13px 18px;cursor:pointer;border-radius:0;transition:background .15s;font-size:14px;color:var(--text);border:none;background:none;width:100%;text-align:left}
+.hm-item:hover{background:var(--blue-bg);color:var(--blue)}
+.hm-item-ico{font-size:18px;width:24px;text-align:center}
+.hm-overlay{position:fixed;inset:0;z-index:499;background:rgba(0,0,0,.3);display:none}
+#hamburgerMenu.show~#hmOverlay{display:block}
+
+/* Giacenze Page */
+#giacenzePage{position:fixed;inset:0;z-index:350;background:var(--bg);display:none;flex-direction:column;max-width:480px;margin:0 auto}
+#giacenzePage.show{display:flex}
+.g-header{display:flex;align-items:center;gap:10px;padding:0 14px;min-height:52px;background:var(--blue);flex-shrink:0}
+.g-back{width:34px;height:34px;border:none;background:rgba(255,255,255,.2);border-radius:8px;color:#fff;font-size:18px;cursor:pointer;flex-shrink:0}
+.g-title{font-size:14px;font-weight:700;color:#fff;flex:1}
+.g-search-bar{padding:10px 14px;background:var(--s1);border-bottom:1px solid var(--border);display:flex;gap:7px;flex-shrink:0}
+.g-input{flex:1;padding:10px 12px;background:var(--s2);border:1.5px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:14px;outline:none;font-family:var(--sans)}
+.g-input:focus{border-color:var(--blue)}
+.g-status{padding:7px 14px;background:var(--s2);border-bottom:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--text2);flex-shrink:0}
+#giacenzeResults{flex:1;overflow-y:auto;padding:12px 14px}
+.g-loading,.g-empty{padding:30px;text-align:center;color:var(--dim);font-size:13px}
+/* Articoli da scegliere */
+.g-article-row{display:flex;gap:10px;padding:11px 14px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r-sm);cursor:pointer;margin-bottom:6px;transition:background .12s}
+.g-article-row:hover{background:var(--blue-bg);border-color:var(--blue-dim)}
+.g-art-cod{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--blue);min-width:90px;flex-shrink:0}
+.g-art-desc{font-size:13px;color:var(--text)}
+/* Tabella giacenze */
+.g-table{width:100%;border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.g-row{display:grid;grid-template-columns:100px 1fr 50px 1fr 80px;gap:0}
+.g-header{background:var(--blue);color:#fff;font-size:11px;font-weight:700}
+.g-row:not(.g-header){border-top:1px solid var(--border);background:var(--s1)}
+.g-row:not(.g-header):nth-child(even){background:var(--s2)}
+.g-cell{padding:9px 10px;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.g-cell.g-cod{font-family:var(--mono);font-weight:700;color:var(--blue)}
+.g-cell.g-giac{text-align:right;font-family:var(--mono)}
+.g-header .g-cell{color:#fff}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- AUTH -->
+  <div class="auth-screen" id="authScreen">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-logo">📦</div>
+        <div class="auth-title">ScanPC</div>
+        <div class="auth-subtitle">Gestione comande</div>
+      </div>
+      <div class="auth-body">
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tabLogin"    onclick="showAuthTab('login')">Accedi</button>
+          <button class="auth-tab"        id="tabRegister" onclick="showAuthTab('register')">Registrati</button>
+        </div>
+        <div id="authError" class="auth-error"></div>
+
+        <div id="loginForm">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="field"><label>Nome utente</label><input type="text" id="loginUser" placeholder="Il tuo nome" maxlength="32" autocomplete="username"></div>
+            <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••" maxlength="64" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+            <div class="auth-spinner" id="loginSpinner"></div>
+            <button class="btn-auth" id="loginBtn" onclick="doLogin()">Accedi →</button>
+          </div>
+        </div>
+
+        <div id="registerForm" style="display:none">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div class="field"><label>Nome utente</label><input type="text" id="regUser" placeholder="Scegli un nome" maxlength="32" autocomplete="username"></div>
+            <div class="field"><label>Password</label><input type="password" id="regPass" placeholder="Min. 4 caratteri" maxlength="64" autocomplete="new-password"></div>
+            <div class="field"><label>Conferma password</label><input type="password" id="regPass2" placeholder="Ripeti password" maxlength="64" autocomplete="new-password" onkeydown="if(event.key==='Enter')doRegister()"></div>
+            <div class="auth-spinner" id="regSpinner"></div>
+            <button class="btn-auth" id="regBtn" onclick="doRegister()">Registrati →</button>
+          </div>
+        </div>
+      </div>
+      <div class="auth-footer">ScanPC v3</div>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header style="display:none" id="appHeader">
+    <div class="brand">
+      <div class="brand-icon">📦</div>
+      <span class="brand-name">SCANPC</span>
+    </div>
+    <button class="hamburger-btn" onclick="openHamburger()">☰</button>
+    <div class="header-right">
+      <div class="user-chip" id="userChip">👤</div>
+      <div class="pill" id="pill"><div class="pill-dot"></div><span id="pillLabel">offline</span></div>
+      <button class="logout-btn" onclick="doLogout()" title="Logout">⏻</button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div class="status-bar">
+      <span id="pcStatusLabel">PC offline</span>
+      <span id="usersOnlineLabel"></span>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tabComBtn" onclick="switchTab('com')">
+        <span class="tab-ico">📋</span><span>Comande</span>
+        <span class="tab-badge" id="comBadge"></span>
+      </button>
+      <button class="tab-btn" id="tabNewBtn" onclick="switchTab('new')">
+        <span class="tab-ico">＋</span><span>Nuova</span>
+      </button>
+    </div>
+
+    <!-- TAB COMANDE -->
+    <div class="tab-panel active" id="tabCom">
+      <div class="list-header">
+        <span class="list-title">Comande ricevute</span>
+        <span class="list-count" id="ordersCount">0</span>
+      </div>
+      <div id="ordersList">
+        <div class="empty-state" id="emptyOrders">
+          <div class="e-ico">📭</div>
+          <p>Nessuna comanda ricevuta.<br>Le comande dal PC appariranno qui.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB NUOVA -->
+    <div class="tab-panel" id="tabNew">
+      <div class="new-top">
+        <div class="new-actions">
+          <div class="action-card ac-blue" onclick="openSearchPage('cod_art')">
+            <div class="ac-ico">🔍</div>
+            <div class="ac-label">Cerca articolo</div>
+          </div>
+          <div class="action-card ac-scan" id="scanCard" onclick="toggleScanGuarded()">
+            <div class="ac-ico" id="scanIco">📷</div>
+            <div class="ac-label" id="scanLbl">Fotocamera</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Camera -->
+      <div id="newCamView">
+        <video id="newVideo" autoplay playsinline muted></video>
+        <canvas id="newCanvas"></canvas>
+        <div class="vf-ov"><div class="vf-box">
+          <div class="vf-c tl"></div><div class="vf-c tr"></div>
+          <div class="vf-c bl"></div><div class="vf-c br"></div>
+          <div class="vf-line" id="vfLine"></div>
+        </div></div>
+        <div class="vf-flash" id="vfFlash"></div>
+        <div class="vf-chip"  id="vfChip"></div>
+      </div>
+
+      <!-- Carrello -->
+      <div class="cart-section">
+        <div class="cart-head">
+          <span class="cart-title-txt">Carrello <span class="cart-n" id="cartN">0</span></span>
+          <button class="cart-clear-btn" onclick="clearCart()">Svuota</button>
+        </div>
+        <div id="cartItems"><div class="cart-ph">Aggiungi articoli con ricerca o fotocamera</div></div>
+        <div class="note-area">
+          <input class="note-input" id="orderCliente" type="text" placeholder="Nome cliente (opzionale)…" style="margin-bottom:5px">
+          <textarea class="note-input" id="orderNote" rows="2" placeholder="Note (opzionale)…"></textarea>
+        </div>
+        <div class="cart-footer">
+          <button class="btn-primary" id="btnSendOrder" onclick="sendOrder()" disabled>Invia comanda</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGINA COMANDA RICEVUTA -->
+<div id="orderPage">
+  <div class="op-header">
+    <button class="op-back" onclick="closeOrderPage()">←</button>
+    <div class="op-hinfo">
+      <div class="op-htitle" id="opFrom"></div>
+      <div class="op-hid"    id="opId"></div>
+    </div>
+  </div>
+  <div id="opBody"></div>
+  <div class="op-add-bar">
+    <button class="op-btn-add" onclick="opAddArticolo()">＋ Aggiungi articolo</button>
+  </div>
+  <div class="op-footer">
+    <button class="op-btn-reinoltra" onclick="opReinoltra()">↩ Reinoltra al PC</button>
+    <button class="op-btn-ok"        onclick="opOk()">✓ OK — Rimuovi</button>
+  </div>
+</div>
+
+<!-- PAGINA DETTAGLIO ARTICOLO (carrello) -->
+<div id="itemPage">
+  <div class="ip-header">
+    <button class="ip-back" onclick="closeItemPage()">←</button>
+    <span class="ip-title" id="ipCodArt">Articolo</span>
+  </div>
+  <div id="ipBody">
+    <div class="ip-section"><div class="ip-desc" id="ipDesc"></div></div>
+    <div class="ip-section">
+      <div class="ip-section-title">Quantità</div>
+      <div class="qty-controls">
+        <button class="qty-big-btn" onclick="ipQty(-1)">−</button>
+        <input class="qty-big-input" id="ipQtyInput" type="text" inputmode="decimal" onchange="ipApplyQty()" onblur="ipApplyQty()">
+        <button class="qty-big-btn" onclick="ipQty(+1)">+</button>
+      </div>
+      <div class="qty-step-info" id="ipStepInfo">Step: 1</div>
+    </div>
+    <div class="ip-section">
+      <div class="ip-section-title">Unità di misura</div>
+      <select class="um-select" id="ipUmSelect" onchange="ipUmChange()"><option value="">—</option></select>
+    </div>
+    <div class="ip-section">
+      <div class="ip-section-title">Nota per questo articolo</div>
+      <textarea class="item-nota-input" id="ipNota" rows="3" placeholder="Aggiungi una nota…"></textarea>
+    </div>
+  </div>
+  <div class="ip-footer">
+    <button class="ip-btn-del" onclick="ipRemove()">🗑 Rimuovi</button>
+    <button class="ip-btn-ok"  onclick="ipConfirm()">✓ Conferma</button>
+  </div>
+</div>
+
+<!-- PAGINA RICERCA -->
+<div id="searchPage">
+  <div class="sp-header">
+    <button class="sp-back" onclick="closeSearchPage()">←</button>
+    <span class="sp-title" id="spTitle">Cerca articolo</span>
+    <span class="sp-count" id="spCount"></span>
+  </div>
+  <div class="sp-search-bar">
+    <input class="sp-input" id="spInput" type="text" placeholder="Cerca…"
+      oninput="onSpInput()" onkeydown="if(event.key==='Enter')spSearch(spMode)">
+    <div class="sp-btns">
+      <button class="sp-btn active"  id="spBtnCod"  onclick="spToggleMode('cod_art')">COD</button>
+      <button class="sp-btn"         id="spBtnDesc" onclick="spToggleMode('descrizione')">DESC</button>
+      <button class="sp-btn blue-btn"               onclick="spSearch(spMode)">🔍</button>
+    </div>
+  </div>
+  <div class="sp-status">
+    <div class="sp-spinner" id="spSpinner"></div>
+    <span id="spStatusTxt">Digita per cercare nel database</span>
+  </div>
+  <div id="spResults">
+    <div class="sp-ph"><div class="pi">🔍</div><p>Cerca per codice o descrizione.</p></div>
+  </div>
+</div>
+
+<!-- Overlay hamburger -->
+<div id="hmOverlay" class="hm-overlay" onclick="closeHamburger()"></div>
+
+<!-- Hamburger Menu -->
+<div id="hamburgerMenu">
+  <div class="hm-header">
+    <span class="hm-title">MENU</span>
+    <button class="hm-close" onclick="closeHamburger()">✕</button>
+  </div>
+  <div class="hm-items">
+    <button class="hm-item" onclick="openGiacenzePage()">
+      <span class="hm-item-ico">📦</span>
+      <span>Giacenze</span>
+    </button>
+  </div>
+</div>
+
+<!-- Pagina Giacenze -->
+<div id="giacenzePage">
+  <div class="g-header">
+    <button class="g-back" onclick="closeGiacenzePage()">←</button>
+    <span class="g-title">Giacenze</span>
+  </div>
+  <div class="g-search-bar">
+    <input class="g-input" id="giacenzeInput" type="text" placeholder="Codice articolo…"
+      oninput="" onkeydown="if(event.key==='Enter')gSearch()">
+    <div class="sp-btns">
+      <button class="sp-btn active" id="gBtnCod"  onclick="gToggleMode('cod_art')">COD</button>
+      <button class="sp-btn"        id="gBtnDesc" onclick="gToggleMode('descrizione')">DESC</button>
+      <button class="sp-btn blue-btn"              onclick="gSearch()">🔍</button>
+    </div>
+  </div>
+  <div class="g-status" id="giacenzeStatus">Cerca un articolo per visualizzare la giacenza</div>
+  <div id="giacenzeResults"></div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Librerie scanner -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.4/dist/quagga.min.js"></script>
+
+<!-- Moduli app — ordine importante: utils prima di tutto -->
+<script src="/js/utils.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/websocket.js"></script>
+<script src="/js/scanner.js"></script>
+<script src="/js/search.js"></script>
+<script src="/js/orders.js"></script>
+<script src="/js/neworder.js"></script>
+<script src="/js/giacenze.js"></script>
+
+<!-- Init -->
+<script>
+'use strict';
+tryAutoLogin();
+</script>
+</body>
+</html>
