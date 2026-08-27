@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff"><title>Cammarano Comande</title>
+  <link rel="manifest" href="/manifest.webmanifest"><link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<main class="wrap">
+  <header><h1>Cammarano Comande</h1><div id="status" class="status">Connessione…</div></header>
+  <section id="auth" class="card">
+    <div class="tabs"><button id="tabLogin">Login</button><button id="tabRegister">Registrazione</button></div>
+    <form id="loginForm"><input id="loginEmail" type="email" placeholder="Email" required><input id="loginPassword" type="password" placeholder="Password" required><button>Accedi</button></form>
+    <form id="registerForm" class="hidden"><input id="regName" placeholder="Nome" required><input id="regEmail" type="email" placeholder="Email" required><input id="regPassword" type="password" placeholder="Password (min. 8 caratteri)" required><select id="regRole"><option value="OPERATOR">Operatore</option><option value="OWNER">Proprietario</option></select><button>Registrati</button></form>
+    <p id="authMsg" class="msg"></p>
+  </section>
+
+  <section id="app" class="hidden">
+    <div class="toolbar"><span id="who"></span><button id="pushBtn" class="secondary">Attiva notifiche</button><button id="logoutBtn" class="secondary">Esci</button></div>
+    <section class="card"><h2>Nuova comanda</h2>
+      <div class="row"><input id="codArt" placeholder="Codice articolo, es. IGLU27"><button id="searchBtn">Cerca</button></div>
+      <div id="searchResult"></div><div id="cart"></div>
+      <label>Destinatario</label><select id="recipient"></select>
+      <button id="sendBtn">Invia comanda</button><p id="orderMsg" class="msg"></p>
+    </section>
+    <section class="card"><div class="row between"><h2>Comande</h2><button id="refreshBtn" class="secondary">Aggiorna</button></div><div id="orders"></div></section>
+  </section>
+</main>
+<script src="/static/app.js" defer></script>
+</body></html>
